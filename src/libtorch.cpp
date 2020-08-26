@@ -6,6 +6,7 @@
 #include <iostream>
 #include <common.h>
 
+
 using namespace std::chrono_literals;
 using namespace torch;
 
@@ -72,11 +73,14 @@ AlphaZeroNet::AlphaZeroNet(const unsigned int num_layers, int64_t num_channels, 
     // residual block
     ResidualBlock *res_list = new ResidualBlock[num_layers]();//  ResidualBlock(3, num_channels);
     res_list[0] = ResidualBlock(3, num_channels);
-    res_list[0].to(torch::kCUDA);
     for (unsigned int i = 1; i<num_layers; i++){
         res_list[i] = ResidualBlock(num_channels, num_channels);
-        res_list[i].to(torch::kCUDA);
      }
+    if (USE_GPU) {
+        for (unsigned int i = 0; i < num_layers; i++) {
+            res_list[i].to(torch::kCUDA);
+        }
+    }
     res_layers = nn::Sequential(*res_list);
 
     //  policy head
@@ -121,22 +125,21 @@ AlphaZeroNet::AlphaZeroNet(const unsigned int num_layers, int64_t num_channels, 
     return std::make_pair(p,v);
   }
 
-NeuralNetwork::NeuralNetwork(bool use_gpu,
-                             unsigned int batch_size)
+NeuralNetwork::NeuralNetwork(unsigned int batch_size)
     : //module(std::make_shared<torch::jit::script::Module>(torch::jit::load(model_path.c_str()))),
-      use_gpu(use_gpu),
       batch_size(batch_size),
       running(true),
       loop(nullptr) {
   module = std::make_shared<AlphaZeroNet>(
   AlphaZeroNet(/*num_layers=*/4,/*num_channels=*/256,/*n=*/15,/*action_size=*/15*15));
 
-  if (this->use_gpu) {
+  if (USE_GPU) {
     // move to CUDA
     this->module->to(at::kCUDA);
   }
 
-  this->optimizer(this->module->parameters(), torch::optim::AdamOptions(2e-4).beta1(0.5));
+   //optimizer(this->module->parameters(), torch::optim::AdamOptions(2e-4).beta1(0.5));
+   //auto optimizer = torch::optim::Adam(this->module->parameters(), 0.01);
 
   // run infer thread
   this->loop = std::make_unique<std::thread>([this] {
@@ -160,7 +163,7 @@ NeuralNetwork::~NeuralNetwork() {
 }
 
 std::future<NeuralNetwork::return_type> NeuralNetwork::commit(Gomoku* gomoku) {
-  states = this->transorm_gomoku_to_Tensor(gomoku);
+  auto states = transorm_gomoku_to_Tensor(gomoku);
 
   // emplace task
   std::promise<return_type> promise;
@@ -241,7 +244,7 @@ void NeuralNetwork::infer() {
     return;
   }
 
-  Tensor inputs = this->use_gpu ? cat(states, 0).to(at::kCUDA) : cat(states, 0);
+  Tensor inputs = USE_GPU ? cat(states, 0).to(at::kCUDA) : cat(states, 0);
   auto result = this->module->forward(inputs);
   Tensor p_batch = result.first.exp().toType(kFloat32).to(at::kCPU);
   Tensor v_batch = result.second.toType(kFloat32).to(at::kCPU);
@@ -262,18 +265,19 @@ void NeuralNetwork::infer() {
 
 void NeuralNetwork::train(CustomType::board_buff_type board_buffer){
   
-  int size = board_buffer.size;
-  CustomType::board_buff_type rand_board_buffer = std::vector<CustomType::board_buff_type>(size);
-  std::vector<int> rand_order(size);
-  for (int i = 0; i < size; i++) {
-      rand_order.push_back (i);
-  }
-  unsigned seed = std::chrono::system_clock::now ().time_since_epoch ().count();
-  std::shuffle (rand_order.begin (), rand_order.end (), std::default_random_engine(seed));
-  for (int i = 0; i < size; i++) {
-      rand_board_buffer.push_back(board_buffer(rand_order[i]));
-  }
-  board_buffer.clear();
+    auto size = board_buffer.size();
+    std::random_shuffle(board_buffer.begin(), board_buffer.end());
+  //CustomType::board_buff_type rand_board_buffer = CustomType::board_buff_type(size);
+  //std::vector<int> rand_order(size);
+  //for (int i = 0; i < size; i++) {
+  //    rand_order.push_back (i);
+  //}
+  //unsigned seed = std::chrono::system_clock::now ().time_since_epoch ().count();
+  //std::shuffle (rand_order.begin (), rand_order.end (), std::default_random_engine(seed));
+  //for (int i = 0; i < size; i++) {
+  //    rand_board_buffer.push_back(board_buffer(rand_order[i]));
+  //}
+  //board_buffer.clear();
   int pt = 0;
   int batch_size = 256;
   while(pt + batch_size < size){
@@ -281,5 +285,4 @@ void NeuralNetwork::train(CustomType::board_buff_type board_buffer){
     pt += batch_size;
     // TODO optimizer
   }
-  rand_board_buffer.clear();
 }

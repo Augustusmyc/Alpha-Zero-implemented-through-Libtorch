@@ -31,13 +31,13 @@ int main() {
   gomoku.execute_move(12);
   gomoku.execute_move(15);
 
-  // test display
-  gomoku.display();
+  // test render
+  gomoku.render();
 
   std::cout << gomoku.get_last_move() << std::endl;
   std::cout << gomoku.get_current_color() << std::endl;
 
-  NeuralNetwork nn("/dataspace/azgomu/test/models/best_checkpoint.pt", true, 1);
+  NeuralNetwork nn(1);
   auto res = nn.commit(&gomoku).get();
   auto p = res[0];
   auto v = res[1];
@@ -46,6 +46,7 @@ int main() {
   std::cout << std::endl;
 
   std::cout << v << std::endl;
+
 
   // 2
   gomoku.execute_move(24);
@@ -62,6 +63,7 @@ int main() {
   std::cout << v << std::endl;
 
   // stress testing
+  std::cout << "stress testing" << std::endl;
   auto start = std::chrono::system_clock::now();
 
   for (unsigned i = 0; i < 1000; i++) {
@@ -71,7 +73,7 @@ int main() {
   res = nn.commit(&gomoku).get();
   auto end = std::chrono::system_clock::now();
 
-  std::cout <<  double(std::chrono::duration_cast<std::chrono::microseconds>(end -
+  std::cout <<  "cost time:" << double(std::chrono::duration_cast<std::chrono::microseconds>(end -
                                                                      start)
                        .count()) *
                    std::chrono::microseconds::period::num /

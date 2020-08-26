@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <gomoku.h>
+#include <common.h>
 
 using namespace torch;
 
@@ -37,7 +38,7 @@ class NeuralNetwork {
  public:
   using return_type = std::vector<std::vector<double>>;
 
-  NeuralNetwork(bool use_gpu, unsigned int batch_size);
+  NeuralNetwork(unsigned int batch_size);
   ~NeuralNetwork();
 
   void save_weights(string model_path);
@@ -53,11 +54,12 @@ class NeuralNetwork {
 
  private:
   using task_type = std::pair<Tensor, std::promise<return_type>>;
-  optim::Adam optimizer;
+  //optim::Adam optimizer;
   std::shared_ptr<AlphaZeroNet> module;
   
 
   void infer();  // infer
+  void train(CustomType::board_buff_type board_buffer);
   std::unique_ptr<std::thread> loop;  // call infer in loop
   bool running;                       // is running
 
@@ -67,5 +69,4 @@ class NeuralNetwork {
 
   
   unsigned int batch_size;                             // batch size
-  bool use_gpu;                                        // use gpu
 };

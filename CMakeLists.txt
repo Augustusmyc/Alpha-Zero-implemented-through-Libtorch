@@ -7,17 +7,17 @@ option(UNIT_TEST "unit test" ON)
 
 SET(CMAKE_BUILD_TYPE "Debug")
 # SET(CMAKE_BUILD_TYPE "Release")
-SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g2 -ggdb")
-SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
-
 
 # gcc
 if(CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_CXX_STANDARD 17)
+    SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g2 -ggdb")
+    SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 endif()
 
-set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "E:/libtorch")
+
 # find torch
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "D:/libtorch")
 find_package(Torch REQUIRED)
 
 
@@ -37,14 +37,14 @@ if(UNIT_TEST)
     #add_executable(thread_pool_test ./test/thread_pool_test.cpp)
     #target_link_libraries(thread_pool_test ${TORCH_LIBRARIES})
 
-    add_executable(main ./test/gomoku_test.cpp)
-    target_link_libraries(main ${TORCH_LIBRARIES})
+    #add_executable(gomoku_test ./test/gomoku_test.cpp)
+    #target_link_libraries(gomoku_test test_lib)
 
-    #add_executable(libtorch_test ./test/libtorch_test.cpp)
-    #target_link_libraries(libtorch_test test_lib)
+    add_executable(libtorch_test ./test/libtorch_test.cpp)
+    target_link_libraries(libtorch_test test_lib)
 
-    # add_executable(main ./test/mcts_test.cpp)   # play game with human
-    # target_link_libraries(main test_lib)
+    # add_executable(mcts_test ./test/mcts_test.cpp)   # play game with human
+    # target_link_libraries(mcts_test test_lib)
 
     #add_executable(multi_games_test ./test/multi_games_test.cpp)
     #target_link_libraries(multi_games_test test_lib)
@@ -56,11 +56,9 @@ endif()
 # The following code block is suggested to be used on Windows.
 # According to https://github.com/pytorch/pytorch/issues/25457,
 # the DLLs need to be copied to avoid memory errors.
+
 if (MSVC)
   file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
-  add_custom_command(TARGET main
-                     POST_BUILD
-                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                     ${TORCH_DLLS}
-                     ${CMAKE_CURRENT_BINARY_DIR}/Debug)
+  add_custom_command(TARGET libtorch_test POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                     ${TORCH_DLLS} ${CMAKE_CURRENT_BINARY_DIR}/Debug)
 endif (MSVC)
