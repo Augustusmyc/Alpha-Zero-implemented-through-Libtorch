@@ -280,7 +280,7 @@ void NeuralNetwork::train(CustomType::board_buff_type board_buffer){
   //board_buffer.clear();
   int pt = 0;
   int batch_size = 256;
-  while(pt + batch_size < size){
+  while(pt < size - batch_size){
     //Tensor inputs = cat({}, 0);  // TODO 选中一部分
     pt += batch_size;
     // TODO optimizer

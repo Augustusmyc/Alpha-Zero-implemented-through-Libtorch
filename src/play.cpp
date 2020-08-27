@@ -12,8 +12,7 @@ SelfPlay::SelfPlay(NeuralNetwork *nn):
         {}
 
 void SelfPlay::play(){
-  const int board_size = 15;
-  auto g = std::make_shared<Gomoku>(board_size, 5, 1);
+  auto g = std::make_shared<Gomoku>(BORAD_SIZE, 5, 1);
   MCTS m(nn, 4, 3, 160, 0.3, g->get_action_size());
   std::vector<int> game_state;
   game_state = g->get_game_status();
@@ -26,7 +25,7 @@ void SelfPlay::play(){
     {
        std::lock_guard<std::mutex> lock(this->lock);
        p_buffer->emplace_back(action_probs);   //TODO v board
-       board_buffer->emplace_back(transorm_gomoku_to_Tensor(g));//->get_board());
+       //board_buffer->emplace_back(transorm_gomoku_to_Tensor(g.get()));//->get_board());
     }
     int res = m.get_action_by_sample(action_probs);
     m.update_with_move(res);

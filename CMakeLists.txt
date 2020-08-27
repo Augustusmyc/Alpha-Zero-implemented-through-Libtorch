@@ -5,12 +5,12 @@ project(cppgomu)
 # option(WRAP_LIB "wrap library" ON)
 option(UNIT_TEST "unit test" ON)
 
+set(CMAKE_CXX_STANDARD 14)
 SET(CMAKE_BUILD_TYPE "Debug")
 # SET(CMAKE_BUILD_TYPE "Release")
 
 # gcc
 if(CMAKE_COMPILER_IS_GNUCC)
-    set(CMAKE_CXX_STANDARD 17)
     SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g2 -ggdb")
     SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 endif()
@@ -37,17 +37,17 @@ if(UNIT_TEST)
     #add_executable(thread_pool_test ./test/thread_pool_test.cpp)
     #target_link_libraries(thread_pool_test ${TORCH_LIBRARIES})
 
-    #add_executable(gomoku_test ./test/gomoku_test.cpp)
-    #target_link_libraries(gomoku_test test_lib)
+    # add_executable(gomoku_test ./test/gomoku_test.cpp)
+    # target_link_libraries(gomoku_test test_lib)
 
-    add_executable(libtorch_test ./test/libtorch_test.cpp)
-    target_link_libraries(libtorch_test test_lib)
+    # add_executable(libtorch_test ./test/libtorch_test.cpp)
+    # target_link_libraries(libtorch_test test_lib)
 
     # add_executable(mcts_test ./test/mcts_test.cpp)   # play game with human
     # target_link_libraries(mcts_test test_lib)
 
-    #add_executable(multi_games_test ./test/multi_games_test.cpp)
-    #target_link_libraries(multi_games_test test_lib)
+    add_executable(multi_games_test ./test/multi_games_test.cpp)
+    target_link_libraries(multi_games_test test_lib)
 
     #add_executable(main ./test/train_net_test.cpp)
     #target_link_libraries(main ${TORCH_LIBRARIES})
@@ -59,6 +59,6 @@ endif()
 
 if (MSVC)
   file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
-  add_custom_command(TARGET libtorch_test POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different
+  add_custom_command(TARGET test_lib POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different
                      ${TORCH_DLLS} ${CMAKE_CURRENT_BINARY_DIR}/Debug)
 endif (MSVC)
