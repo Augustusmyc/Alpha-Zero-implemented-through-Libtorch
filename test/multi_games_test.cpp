@@ -7,11 +7,11 @@
 #include <play.h>
 
 int main() {
-  NeuralNetwork *model = new NeuralNetwork(1024);
+  NeuralNetwork *model = new NeuralNetwork(8);
   //torch::optim::SGD optimizer(model->module->parameters(), /*lr=*/0.01);
   SelfPlay *sp = new SelfPlay(model);
-  sp->self_play_for_train(3);
-  auto p_buffer = sp->get_buffer();
+  auto train_buffer = sp->self_play_for_train(3);
+  //std::cout << train_buffer[0] << std::endl;
   return 0;
 }
 

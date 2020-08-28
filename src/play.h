@@ -14,17 +14,19 @@
 #include <gomoku.h>
 #include <common.h>
 
+using namespace customType;
 
 class SelfPlay{
     public:
         SelfPlay(NeuralNetwork *nn);
         //~SelfPlay();
-        CustomType::p_buff_type self_play_for_train(unsigned int game_num);
-        CustomType::board_buff_type get_buffer();
+        std::tuple<board_buff_type, p_buff_type, v_buff_type> self_play_for_train(unsigned int game_num);
+        
     private:
         void play();
-        CustomType::p_buff_type *p_buffer;
-        CustomType::board_buff_type *board_buffer;
+        p_buff_type *p_buffer;
+        board_buff_type *board_buffer;
+        v_buff_type *v_buffer;
         NeuralNetwork *nn;
         std::unique_ptr<ThreadPool> thread_pool;
         //std::queue<task_type> tasks;  // tasks queue

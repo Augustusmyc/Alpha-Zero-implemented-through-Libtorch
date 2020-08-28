@@ -14,8 +14,9 @@
 #include <common.h>
 
 using namespace torch;
+using namespace customType;
 
-static Tensor transorm_gomoku_to_Tensor(Gomoku* gomoku);
+
 
 struct AlphaZeroNet : nn::Module{
   public:
@@ -50,7 +51,7 @@ class NeuralNetwork {
   void set_batch_size(unsigned int batch_size) {    // set batch_size
     this->batch_size = batch_size;
   };
-  //torch::optim::SGD optimizer;
+  static Tensor transorm_gomoku_to_Tensor(Gomoku* gomoku);
 
  private:
   using task_type = std::pair<Tensor, std::promise<return_type>>;
@@ -59,7 +60,7 @@ class NeuralNetwork {
   
 
   void infer();  // infer
-  void train(CustomType::board_buff_type board_buffer);
+  void train(board_buff_type board_buffer);
   std::unique_ptr<std::thread> loop;  // call infer in loop
   bool running;                       // is running
 

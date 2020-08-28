@@ -55,7 +55,7 @@ void Gomoku::execute_move(move_type move) {
   this->cur_color = -this->cur_color;
 }
 
-std::vector<int> Gomoku::get_game_status() {
+std::pair<int, int> Gomoku::get_game_status() {
   // return (is ended, winner)
   auto n = this->n;
   auto n_in_row = this->n_in_row;

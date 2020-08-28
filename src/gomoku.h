@@ -13,7 +13,7 @@ public:
   bool has_legal_moves();
   std::vector<int> get_legal_moves();
   void execute_move(move_type move);
-  std::vector<int> get_game_status();
+  std::pair<int, int> get_game_status();
   void display() const;
   void render();
   //bool is_illegal(move_type move);

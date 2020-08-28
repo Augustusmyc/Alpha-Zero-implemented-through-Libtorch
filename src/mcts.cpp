@@ -271,7 +271,7 @@ int MCTS::get_best_action(Gomoku *gomoku) {
   }
 
   // calculate probs
-  std::vector<double> action_probs(gomoku->get_action_size(), 0);
+  //std::vector<double> action_probs(gomoku->get_action_size(), 0);
   const auto &children = this->root->children;
 
   // greedy
@@ -322,7 +322,7 @@ void MCTS::simulate(std::shared_ptr<Gomoku> game) {
   double value = 0;
 
   // not end
-  if (status[0] == 0) {
+  if (status.first == 0) {
     // predict action_probs and value by neural network
     std::vector<double> action_priors(this->action_size, 0);
 
@@ -369,7 +369,7 @@ void MCTS::simulate(std::shared_ptr<Gomoku> game) {
 
   } else {
     // end
-    auto winner = status[1];
+    auto winner = status.second;
     value = (winner == 0 ? 0 : (winner == game->get_current_color() ? 1 : -1));
   }
 

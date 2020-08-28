@@ -8,8 +8,8 @@
 
 #include <libtorch.h>
 using namespace torch;
-class CustomType{
-    public:
-        using p_buff_type = std::vector<std::vector<double>>;
-        using board_buff_type = std::vector<Tensor>; //Gomoku::board_type>;
-};
+namespace customType {
+    using v_buff_type = std::vector<int>;
+    using p_buff_type = std::vector<std::vector<double>>;
+    using board_buff_type = std::vector<Tensor>;
+}

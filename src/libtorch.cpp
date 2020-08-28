@@ -9,6 +9,7 @@
 
 using namespace std::chrono_literals;
 using namespace torch;
+using namespace customType;
 
 nn::Conv2d conv3x3(int64_t in_channels, int64_t out_channels, unsigned int stride=1){
   return nn::Conv2d(nn::Conv2dOptions(/*in_channel=*/in_channels, out_channels, /*kernel_size=*/3).stride(stride).padding(1).bias(false));
@@ -179,7 +180,7 @@ std::future<NeuralNetwork::return_type> NeuralNetwork::commit(Gomoku* gomoku) {
   return ret;
 }
 
-static Tensor transorm_gomoku_to_Tensor(Gomoku* gomoku){
+Tensor NeuralNetwork::transorm_gomoku_to_Tensor(Gomoku* gomoku){
   int n = gomoku->get_n();
 
   // convert data format
@@ -263,7 +264,7 @@ void NeuralNetwork::infer() {
   }
 }
 
-void NeuralNetwork::train(CustomType::board_buff_type board_buffer){
+void NeuralNetwork::train(board_buff_type board_buffer){
   
     auto size = board_buffer.size();
     std::random_shuffle(board_buffer.begin(), board_buffer.end());
