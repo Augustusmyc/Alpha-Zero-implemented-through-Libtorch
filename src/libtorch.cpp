@@ -5,7 +5,7 @@
 #include <torch/torch.h>
 #include <iostream>
 #include <common.h>
-
+#include <random>
 
 using namespace std::chrono_literals;
 using namespace torch;
@@ -130,16 +130,19 @@ NeuralNetwork::NeuralNetwork(unsigned int batch_size)
     : //module(std::make_shared<torch::jit::script::Module>(torch::jit::load(model_path.c_str()))),
       batch_size(batch_size),
       running(true),
+      //optimizer(this->module->parameters(), torch::optim::AdamOptions(2e-4)),
       loop(nullptr) {
   module = std::make_shared<AlphaZeroNet>(
-  AlphaZeroNet(/*num_layers=*/4,/*num_channels=*/256,/*n=*/15,/*action_size=*/15*15));
+  AlphaZeroNet(/*num_layers=*/4,/*num_channels=*/256,/*n=*/BORAD_SIZE,/*action_size=*/BORAD_SIZE * BORAD_SIZE));
+
+  optimizer = new torch::optim::Adam(this->module->parameters(), torch::optim::AdamOptions(2e-4));
 
   if (USE_GPU) {
     // move to CUDA
     this->module->to(at::kCUDA);
   }
 
-   //optimizer(this->module->parameters(), torch::optim::AdamOptions(2e-4).beta1(0.5));
+   //this->optimizer(this->module->parameters(), torch::optim::AdamOptions(2e-4).beta1(0.5));
    //auto optimizer = torch::optim::Adam(this->module->parameters(), 0.01);
 
   // run infer thread
@@ -215,6 +218,9 @@ Tensor NeuralNetwork::transorm_gomoku_to_Tensor(Gomoku* gomoku){
 }
 
 void NeuralNetwork::infer() {
+    {
+        //torch::NoGradGuard no_grad;
+        torch::AutoGradMode enable_grad(false);
   // get inputs
   std::vector<torch::Tensor> states;
   std::vector<std::promise<return_type>> promises;
@@ -246,7 +252,12 @@ void NeuralNetwork::infer() {
   }
 
   Tensor inputs = USE_GPU ? cat(states, 0).to(at::kCUDA) : cat(states, 0);
-  auto result = this->module->forward(inputs);
+  
+
+   auto result = this->module->forward(inputs);
+   //std::cout << y.requires_grad() << std::endl; // prints `false`
+
+  
   Tensor p_batch = result.first.exp().toType(kFloat32).to(at::kCPU);
   Tensor v_batch = result.second.toType(kFloat32).to(at::kCPU);
 
@@ -258,32 +269,68 @@ void NeuralNetwork::infer() {
     std::vector<double> prob(static_cast<float*>(p.data_ptr()),
                              static_cast<float*>(p.data_ptr()) + p.size(0));
     std::vector<double> value{v.item<float>()};
+
     return_type temp{std::move(prob), std::move(value)};
 
     promises[i].set_value(std::move(temp));
   }
+  }
 }
 
-void NeuralNetwork::train(board_buff_type board_buffer){
+void NeuralNetwork::train(board_buff_type board_buffer, p_buff_type p_buffer, v_buff_type v_buffer){
   
-    auto size = board_buffer.size();
-    std::random_shuffle(board_buffer.begin(), board_buffer.end());
-  //CustomType::board_buff_type rand_board_buffer = CustomType::board_buff_type(size);
-  //std::vector<int> rand_order(size);
-  //for (int i = 0; i < size; i++) {
-  //    rand_order.push_back (i);
-  //}
-  //unsigned seed = std::chrono::system_clock::now ().time_since_epoch ().count();
-  //std::shuffle (rand_order.begin (), rand_order.end (), std::default_random_engine(seed));
+    int size = board_buffer.size();
+    unsigned seed = rand();
+        //std::chrono::system_clock::now().time_since_epoch().count();
+    auto e = std::default_random_engine(seed);
+    shuffle(board_buffer.begin(), board_buffer.end(), e);
+    e = std::default_random_engine(seed);
+    shuffle(p_buffer.begin(), p_buffer.end(), e);
+    e = std::default_random_engine(seed);
+    shuffle(v_buffer.begin(), v_buffer.end(), e);
+
+    //std::random_shuffle(board_buffer.begin(), board_buffer.end());
+    //board_buff_type rand_board_buffer = CustomType::board_buff_type(size);
+    //std::vector<int> rand_order(size);
+    //for (int i = 0; i < size; i++) {
+    //    rand_order.push_back (i);
+    //}
+    //std::random_shuffle(rand_order.begin(), rand_order.end());
+    //std::sort(board_buffer.begin(), board_buffer.end(), rand_order);
+    //unsigned seed = std::chrono::system_clock::now ().time_since_epoch ().count();
+    //std::shuffle (rand_order.begin (), rand_order.end (), std::default_random_engine(seed));
   //for (int i = 0; i < size; i++) {
   //    rand_board_buffer.push_back(board_buffer(rand_order[i]));
   //}
   //board_buffer.clear();
-  int pt = 0;
-  int batch_size = 256;
-  while(pt < size - batch_size){
-    //Tensor inputs = cat({}, 0);  // TODO 选中一部分
-    pt += batch_size;
-    // TODO optimizer
+  int batch_size = 7;
+  for (int pt = 0; pt < size - batch_size; pt += batch_size) {
+      std::cout << "train pt = " << pt << std::endl;
+      Tensor inputs = cat(board_buff_type(board_buffer.begin() + pt, board_buffer.begin() + pt + batch_size), 0);
+      //std::cout << "inputs dim = " << inputs.dim() << std::endl;
+      //std::cout << "inputs size = " << inputs.size(0) << " " << inputs.size(1) << std::endl;
+
+      Tensor vs = torch::tensor(v_buff_type(v_buffer.begin() + pt, v_buffer.begin() + pt + batch_size)).unsqueeze(1);
+
+      std::vector<Tensor> p_tensor(batch_size);
+      for (int i = 0; i < batch_size; i++) {
+          //v_tensor[i] = torch::tensor(v_buffer[pt + i]);
+          p_tensor[i] = torch::tensor(p_buffer[pt + i]).unsqueeze(0);
+      }
+      //std::cout << "vector size = " << p_tensor.size() << std::endl;
+      Tensor ps = cat(p_tensor, 0);
+      //Tensor vs = cat(v_tensor, 0);
+      optimizer->zero_grad();
+      auto result = this->module->forward(inputs);
+      
+      //Tensor log_ps, Tensor vs, const Tensor target_ps, const Tensor target_vs
+      Tensor loss = alpha_loss(result.first, result.second, ps, vs);
+      loss.backward();
+      optimizer->step();
   }
+}
+
+Tensor func(int n)
+{
+    return tensor(n);
 }

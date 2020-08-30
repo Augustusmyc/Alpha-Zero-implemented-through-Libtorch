@@ -1,10 +1,10 @@
 #pragma once
 
-#define BORAD_SIZE 15
+#define BORAD_SIZE 11
 #define N_IN_ROW 5
 #define BLACK 1
 #define WHITE -BLACK
-#define USE_GPU true
+#define USE_GPU false
 
 #include <libtorch.h>
 using namespace torch;

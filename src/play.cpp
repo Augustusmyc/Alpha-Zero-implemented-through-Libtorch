@@ -15,32 +15,42 @@ SelfPlay::SelfPlay(NeuralNetwork *nn):
         {}
 
 void SelfPlay::play(){
-  auto g = std::make_shared<Gomoku>(BORAD_SIZE, 5, 1);
+  auto g = std::make_shared<Gomoku>(BORAD_SIZE, N_IN_ROW, BLACK);
   MCTS m(nn, 4, 3, 16, 0.3, g->get_action_size());
   std::pair<int,int> game_state;
   game_state = g->get_game_status();
   std::cout << "begin !!" << std::endl;
   int step = 0;
+  board_buff_type *cur_board_buffer = new board_buff_type();
+  v_buff_type *cur_color_buff_type = new v_buff_type();
+  p_buff_type *cur_p_buffer = new p_buff_type();
+
   while (game_state.first == 0) {
     //int res = m.get_best_action(g.get());
     double temp = step < 10 ? 1 : 0;
     auto action_probs = m.get_action_probs(g.get(), temp);
-    {
-       std::lock_guard<std::mutex> lock(this->lock);
-       p_buffer->emplace_back(action_probs);   //TODO v board
-       board_buffer->emplace_back(NeuralNetwork::transorm_gomoku_to_Tensor(g.get()));
-    }
+    cur_p_buffer->emplace_back(action_probs);
+    cur_board_buffer->emplace_back(NeuralNetwork::transorm_gomoku_to_Tensor(g.get()));
+    cur_color_buff_type->emplace_back(g->get_current_color());
     int res = m.get_action_by_sample(action_probs);
     m.update_with_move(res);
     g->execute_move(res);
     game_state = g->get_game_status();
     step++;
   }
-  for (int i = 0; i < p_buffer->size(); i++) {
-        v_buffer->emplace_back(game_state.second);
-    }
+  if (game_state.second != 0) {
+      {
+          std::lock_guard<std::mutex> lock(this->lock);
+          for (int i = 0; i < cur_p_buffer->size(); i++) {
+              this->board_buffer->emplace_back(cur_board_buffer->at(i));
+              this->v_buffer->emplace_back(cur_color_buff_type->at(i) * game_state.second);
+              this->p_buffer->emplace_back(cur_p_buffer->at(i));
+          }
+      }
+  }
 
   std::cout << "total step num = " << step << std::endl;
+  //return { *board_buffer , *p_buffer , *cur_color_buff_type };
 }
 
 std::tuple<board_buff_type, p_buff_type, v_buff_type> SelfPlay::self_play_for_train(unsigned int game_num){

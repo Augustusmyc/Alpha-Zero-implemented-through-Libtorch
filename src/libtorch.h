@@ -44,23 +44,21 @@ class NeuralNetwork {
 
   void save_weights(string model_path);
   void load_weights(string model_path);
-  void train();
+  void train(board_buff_type board_buffer, p_buff_type p_buffer, v_buff_type v_buffer);
 
   std::future<return_type> commit(Gomoku* gomoku);  // commit task to queue
   //std::shared_ptr<torch::jit::script::Module> module;  // torch module    origin:private
-  void set_batch_size(unsigned int batch_size) {    // set batch_size
-    this->batch_size = batch_size;
-  };
   static Tensor transorm_gomoku_to_Tensor(Gomoku* gomoku);
 
  private:
   using task_type = std::pair<Tensor, std::promise<return_type>>;
-  //optim::Adam optimizer;
+  optim::Adam *optimizer;
   std::shared_ptr<AlphaZeroNet> module;
   
 
   void infer();  // infer
-  void train(board_buff_type board_buffer);
+  
+
   std::unique_ptr<std::thread> loop;  // call infer in loop
   bool running;                       // is running
 
