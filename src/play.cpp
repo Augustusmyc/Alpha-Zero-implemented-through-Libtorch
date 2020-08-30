@@ -14,6 +14,33 @@ SelfPlay::SelfPlay(NeuralNetwork *nn):
         thread_pool(new ThreadPool(3))
         {}
 
+std::pair<int, int> SelfPlay::self_play_for_eval(NeuralNetwork *a, NeuralNetwork *b) {
+    int a_win_count = 0;
+    int b_win_count = 0;
+    MCTS ma(a, 4, 3, 16, 0.3, BORAD_SIZE * BORAD_SIZE);
+    MCTS mb(b, 4, 3, 16, 0.3, BORAD_SIZE * BORAD_SIZE);
+    for (int episode = 0; episode < 10; episode++) {
+        int step = 0;
+        g = std::make_shared<Gomoku>(BORAD_SIZE, N_IN_ROW, BLACK);
+        std::pair<int, int> game_state = g->get_game_status();
+        std::cout << episode << " th game!!" << std::endl;
+        while (game_state.first == 0) {
+            bool cur_net = (step + episode) % 2 == 0;
+            int res = cur_net ? ma.get_best_action(g.get()) : mb.get_best_action(g.get());
+            ma.update_with_move(res);
+            mb.update_with_move(res);
+            g->execute_move(res);
+            game_state = g->get_game_status();
+            step++;
+        }
+        std::cout << "total step num = " << step << std::endl;
+        if (game_state.second == BLACK && episode % 2 == 0 || game_state.second == WHITE && episode % 2 == 1) a_win_count++;
+        if (game_state.second == BLACK && episode % 2 == 1 || game_state.second == WHITE && episode % 2 == 0) b_win_count++;
+    }
+    return { a_win_count ,b_win_count };
+}
+
+
 void SelfPlay::play(){
   auto g = std::make_shared<Gomoku>(BORAD_SIZE, N_IN_ROW, BLACK);
   MCTS m(nn, 4, 3, 16, 0.3, g->get_action_size());

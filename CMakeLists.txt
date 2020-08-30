@@ -43,8 +43,8 @@ if(UNIT_TEST)
     # add_executable(libtorch_test ./test/libtorch_test.cpp)
     # target_link_libraries(libtorch_test test_lib)
 
-    # add_executable(mcts_test ./test/mcts_test.cpp)   # play game with human
-    # target_link_libraries(mcts_test test_lib)
+    add_executable(mcts_test ./test/mcts_test.cpp)   # play game with human
+    target_link_libraries(mcts_test test_lib)
 
     add_executable(multi_games_test ./test/multi_games_test.cpp)
     target_link_libraries(multi_games_test test_lib)

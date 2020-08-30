@@ -3,10 +3,10 @@
 
 #include <torch/script.h>
 #include <libtorch.h>
+#include <common.h>
 
 int main() {
-  const int board_size = 15;
-  auto g = std::make_shared<Gomoku>(board_size, 5, 1);
+  auto g = std::make_shared<Gomoku>(BORAD_SIZE, N_IN_ROW, BLACK);
   //Gomoku g(15, 5, 1);
   //g.execute_move(12);
   //g->execute_move(12);
@@ -24,18 +24,18 @@ int main() {
   //torch::jit::script::Module module = torch::jit::load("../test/models/checkpoint.pt");
   
   //NeuralNetwork *module = new NeuralNetwork("/dataspace/azgomu/models/best_checkpoint.pt", true, 1600);
-  NeuralNetwork *module = new NeuralNetwork(true, 1600);
-  module->save_weights("net.pt");
-  module->load_weights("net.pt");
-  MCTS m(module, 4, 3, 1600, 0.3, g->get_action_size());
+  NeuralNetwork *module = new NeuralNetwork(100);
+  //module->save_weights("net.pt");
+  //module->load_weights("net.pt");
+  MCTS m(module, 4, 3, 16, 0.3, g->get_action_size());
 
   std::cout << "RUNNING" << std::endl;
 
   
   char move_ic;
   int move_j;
-  std::vector<int> game_state;
   bool is_illlegal = true;
+  std::pair<int, int> game_state;
 
   while (true) {
     int res = m.get_best_action(g.get());
@@ -43,7 +43,7 @@ int main() {
     g->execute_move(res);
     g->render();
     game_state = g->get_game_status();
-    if (game_state[0] != 0) break;
+    if (game_state.first != 0) break;
     int x, y;
     printf("your move: \n");
     std::cin >> move_ic >> move_j;
@@ -58,13 +58,13 @@ int main() {
       y = move_j - 1;
       is_illlegal = g->is_illegal(x,y);
     }
-    int my_move = x*board_size+y;
+    int my_move = x * BORAD_SIZE + y;
 
     m.update_with_move(my_move);
     g->execute_move(my_move);
     g->render();
-    std::vector<int> game_state = g->get_game_status();
-    if (game_state[0] != 0) break;
+    game_state = g->get_game_status();
+    if (game_state.first != 0) break;
 
 
     // std::for_each(res.begin(), res.end(),
@@ -72,7 +72,7 @@ int main() {
     // std::cout << std::endl;
     // m.update_with_move(-1);
   }
-  std::cout << "winner num = " << game_state[1] << std::endl;
+  std::cout << "winner num = " << game_state.second << std::endl;
   return 0;
 }
 

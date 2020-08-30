@@ -21,6 +21,7 @@ class SelfPlay{
         SelfPlay(NeuralNetwork *nn);
         //~SelfPlay();
         std::tuple<board_buff_type, p_buff_type, v_buff_type> self_play_for_train(unsigned int game_num);
+        std::pair<int,int> self_play_for_eval(NeuralNetwork *a, NeuralNetwork *b);
         
     private:
         p_buff_type *p_buffer;
@@ -33,3 +34,12 @@ class SelfPlay{
         std::mutex lock;              // lock for tasks queue
         std::condition_variable cv;   // condition variable for tasks queue
 };
+
+//class EvalPlay {
+//    public:
+//        EvalPlay(NeuralNetwork* nn);
+//        int self_play_for_eval(int first_weight, int second_weight);
+//    private:
+//        NeuralNetwork* nn;
+//        std::unique_ptr<ThreadPool> thread_pool;
+//};
