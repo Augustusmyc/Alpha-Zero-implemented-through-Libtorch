@@ -46,11 +46,11 @@ if(UNIT_TEST)
     add_executable(mcts_test ./test/mcts_test.cpp)   # play game with human
     target_link_libraries(mcts_test test_lib)
 
-    add_executable(multi_games_test ./test/multi_games_test.cpp)
-    target_link_libraries(multi_games_test test_lib)
+    #add_executable(multi_games_test ./test/multi_games_test.cpp)
+    #target_link_libraries(multi_games_test test_lib)
 
-    #add_executable(main ./test/train_net_test.cpp)
-    #target_link_libraries(main ${TORCH_LIBRARIES})
+    add_executable(train_net_test ./test/train_net_test.cpp)
+    target_link_libraries(train_net_test test_lib)
 endif()
 
 # The following code block is suggested to be used on Windows.

@@ -4,6 +4,8 @@
 #include <common.h>
 #include <libtorch.h>
 
+#include <c10/cuda/CUDACachingAllocator.h>
+
 using namespace customType;
 
 SelfPlay::SelfPlay(NeuralNetwork *nn):
@@ -11,17 +13,18 @@ SelfPlay::SelfPlay(NeuralNetwork *nn):
         board_buffer(new board_buff_type()),
         v_buffer(new v_buff_type()),
         nn(nn),
-        thread_pool(new ThreadPool(3))
+        thread_pool(new ThreadPool(10))
         {}
 
 std::pair<int, int> SelfPlay::self_play_for_eval(NeuralNetwork *a, NeuralNetwork *b) {
     int a_win_count = 0;
     int b_win_count = 0;
-    MCTS ma(a, 4, 3, 16, 0.3, BORAD_SIZE * BORAD_SIZE);
-    MCTS mb(b, 4, 3, 16, 0.3, BORAD_SIZE * BORAD_SIZE);
+    //int tie = 0;
+    MCTS ma(a, 4, 3, 1600, 0.3, BORAD_SIZE * BORAD_SIZE);
+    MCTS mb(b, 4, 3, 1600, 0.3, BORAD_SIZE * BORAD_SIZE);
     for (int episode = 0; episode < 10; episode++) {
         int step = 0;
-        g = std::make_shared<Gomoku>(BORAD_SIZE, N_IN_ROW, BLACK);
+        auto g = std::make_shared<Gomoku>(BORAD_SIZE, N_IN_ROW, BLACK);
         std::pair<int, int> game_state = g->get_game_status();
         std::cout << episode << " th game!!" << std::endl;
         while (game_state.first == 0) {
@@ -34,8 +37,10 @@ std::pair<int, int> SelfPlay::self_play_for_eval(NeuralNetwork *a, NeuralNetwork
             step++;
         }
         std::cout << "total step num = " << step << std::endl;
-        if (game_state.second == BLACK && episode % 2 == 0 || game_state.second == WHITE && episode % 2 == 1) a_win_count++;
-        if (game_state.second == BLACK && episode % 2 == 1 || game_state.second == WHITE && episode % 2 == 0) b_win_count++;
+        if ((game_state.second == BLACK && episode % 2 == 0) || (game_state.second == WHITE && episode % 2 == 1)) a_win_count++;
+        else if ((game_state.second == BLACK && episode % 2 == 1) || (game_state.second == WHITE && episode % 2 == 0)) b_win_count++;
+        //else if (game_state.second == 0) tie++;
+        c10::cuda::CUDACachingAllocator::emptyCache();
     }
     return { a_win_count ,b_win_count };
 }
