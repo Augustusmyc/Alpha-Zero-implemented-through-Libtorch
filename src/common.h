@@ -5,15 +5,15 @@
 
 
 // gomoku
-#define BORAD_SIZE 11
-#define N_IN_ROW 5
+#define BORAD_SIZE 3
+#define N_IN_ROW 3
 #define BLACK 1
 
 // mcts
 #define ACTIONSIZE = BORAD_SIZE*BORAD_SIZE
 #define USE_GPU true
-#define NUM_MCT_THREADS 4
-#define NUM_MCT_SIMS 1600
+#define NUM_MCT_THREADS 1
+#define NUM_MCT_SIMS 7
 #define C_PUCT 5
 #define C_VIRTUAL_LOSS 3
 
@@ -26,7 +26,7 @@
 #define EPOCHS 1.5
 #define BATCH_SIZE 32 //512
 
-#define NUM_TRAIN_THREADS 10
+#define NUM_TRAIN_THREADS 1
 
 
 #include <libtorch.h>

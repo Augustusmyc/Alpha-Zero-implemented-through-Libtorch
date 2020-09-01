@@ -36,7 +36,7 @@ std::pair<int, int> SelfPlay::self_play_for_eval(NeuralNetwork *a, NeuralNetwork
             game_state = g->get_game_status();
             step++;
         }
-        std::cout << "total step num = " << step << std::endl;
+        std::cout << "eval: total step num = " << step << std::endl;
         if ((game_state.second == BLACK && episode % 2 == 0) || (game_state.second == WHITE && episode % 2 == 1)) a_win_count++;
         else if ((game_state.second == BLACK && episode % 2 == 1) || (game_state.second == WHITE && episode % 2 == 0)) b_win_count++;
         //else if (game_state.second == 0) tie++;
@@ -70,7 +70,7 @@ void SelfPlay::play(){
     game_state = g->get_game_status();
     step++;
   }
-  if (game_state.second != 0) {
+  //if (game_state.second != 0) {
       {
           std::lock_guard<std::mutex> lock(this->lock);
           for (int i = 0; i < cur_p_buffer->size(); i++) {
@@ -79,9 +79,9 @@ void SelfPlay::play(){
               this->p_buffer->emplace_back(cur_p_buffer->at(i));
           }
       }
-  }
+  //}
 
-  std::cout << "total step num = " << step << std::endl;
+  std::cout << "total step num = " << step << " winner = " << game_state.second <<std::endl;
   //return { *board_buffer , *p_buffer , *cur_color_buff_type };
 }
 
