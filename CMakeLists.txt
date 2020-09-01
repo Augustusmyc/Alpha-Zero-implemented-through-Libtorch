@@ -13,11 +13,11 @@ SET(CMAKE_BUILD_TYPE "Debug")
 if(CMAKE_COMPILER_IS_GNUCC)
     SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g2 -ggdb")
     SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
+    set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/data/libtorch")
+else()
+    set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "D:/libtorch")
 endif()
 
-
-# find torch
-set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "D:/libtorch")
 find_package(Torch REQUIRED)
 
 

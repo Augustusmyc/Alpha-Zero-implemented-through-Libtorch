@@ -5,7 +5,7 @@
 #include <libtorch.h>
 #include <common.h>
 
-int main() {
+int main(int argc, char* argv[]) {
   auto g = std::make_shared<Gomoku>(BORAD_SIZE, N_IN_ROW, BLACK);
   //Gomoku g(15, 5, 1);
   //g.execute_move(12);
@@ -23,13 +23,19 @@ int main() {
   //std::shared_ptr<torch::jit::script::Module> module = torch::jit::load("../test/models/checkpoint.pt");
   //torch::jit::script::Module module = torch::jit::load("../test/models/checkpoint.pt");
   
-  //NeuralNetwork *module = new NeuralNetwork("/dataspace/azgomu/models/best_checkpoint.pt", true, 1600);
-  NeuralNetwork *module = new NeuralNetwork(100);
+  NeuralNetwork *module = new NeuralNetwork(BATCH_SIZE);
+  if (argc <= 1) {
+      printf("Do not load weights.\n");
+  }
+  else {
+      printf("Load weights.\n");
+      module->load_weights(argv[1]);
+  }
   //module->save_weights("net.pt");
-  //module->load_weights("net.pt");
-  MCTS m(module, 4, 3, 16, 0.3, g->get_action_size());
+  
+  MCTS m(module, NUM_MCT_THREADS, C_PUCT, NUM_MCT_SIMS, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
 
-  std::cout << "RUNNING" << std::endl;
+  std::cout << "Running..." << std::endl;
 
   
   char move_ic;

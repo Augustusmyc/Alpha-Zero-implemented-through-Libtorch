@@ -165,14 +165,16 @@ using namespace torch;
 //};
 
 int main() {
+
+    // system("mkdir weights");
     #ifdef _WIN32
     system("mkdir .\\weights");
     #elif __linux__
     system("mkdir ./weights");
     #endif
 
-    NeuralNetwork* model = new NeuralNetwork(100);
-    NeuralNetwork* old_best_model = new NeuralNetwork(100);
+    NeuralNetwork* model = new NeuralNetwork(BATCH_SIZE);
+    NeuralNetwork* old_best_model = new NeuralNetwork(BATCH_SIZE);
     model->save_weights("./weights/0.pt");
     int best_weight = 0;
     //torch::optim::SGD optimizer(model->module->parameters(), /*lr=*/0.01);
@@ -181,9 +183,9 @@ int main() {
     std::ostringstream new_path;
     while (true) {
         SelfPlay* sp = new SelfPlay(model);
-        auto train_buffer = sp->self_play_for_train(3);
-        std::cout << "3 train size = " << std::get<0>(train_buffer).size() << " " <<
-            std::get<1>(train_buffer).size() << " " << std::get<2>(train_buffer).size() << std::endl;
+        auto train_buffer = sp->self_play_for_train(NUM_TRAIN_THREADS);
+        //std::cout << "3 train size = " << std::get<0>(train_buffer).size() << " " <<
+        //    std::get<1>(train_buffer).size() << " " << std::get<2>(train_buffer).size() << std::endl;
         model->train(std::get<0>(train_buffer), std::get<1>(train_buffer), std::get<2>(train_buffer));
 
         new_path.str("");
@@ -197,7 +199,7 @@ int main() {
         auto win_table = sp->self_play_for_eval(old_best_model, model);
         std::cout << "old win:" << win_table.first << " & new win:" << win_table.second << std::endl;
         if (win_table.second > win_table.first + 2) {
-            std::cout << "new model generated!!" << std::endl;
+            std::cout << "New best model generated!!" << " Current weight = " << current_weight << std::endl;
             int best_weight = current_weight;
         }
         current_weight++;

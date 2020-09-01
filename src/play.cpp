@@ -13,20 +13,20 @@ SelfPlay::SelfPlay(NeuralNetwork *nn):
         board_buffer(new board_buff_type()),
         v_buffer(new v_buff_type()),
         nn(nn),
-        thread_pool(new ThreadPool(10))
+        thread_pool(new ThreadPool(NUM_TRAIN_THREADS))
         {}
 
 std::pair<int, int> SelfPlay::self_play_for_eval(NeuralNetwork *a, NeuralNetwork *b) {
     int a_win_count = 0;
     int b_win_count = 0;
     //int tie = 0;
-    MCTS ma(a, 4, 3, 1600, 0.3, BORAD_SIZE * BORAD_SIZE);
-    MCTS mb(b, 4, 3, 1600, 0.3, BORAD_SIZE * BORAD_SIZE);
+    MCTS ma(a, NUM_MCT_THREADS, C_PUCT, NUM_MCT_SIMS, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
+    MCTS mb(b, NUM_MCT_THREADS, C_PUCT, NUM_MCT_SIMS, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
     for (int episode = 0; episode < 10; episode++) {
         int step = 0;
         auto g = std::make_shared<Gomoku>(BORAD_SIZE, N_IN_ROW, BLACK);
         std::pair<int, int> game_state = g->get_game_status();
-        std::cout << episode << " th game!!" << std::endl;
+        //std::cout << episode << " th game!!" << std::endl;
         while (game_state.first == 0) {
             bool cur_net = (step + episode) % 2 == 0;
             int res = cur_net ? ma.get_best_action(g.get()) : mb.get_best_action(g.get());
@@ -48,7 +48,7 @@ std::pair<int, int> SelfPlay::self_play_for_eval(NeuralNetwork *a, NeuralNetwork
 
 void SelfPlay::play(){
   auto g = std::make_shared<Gomoku>(BORAD_SIZE, N_IN_ROW, BLACK);
-  MCTS m(nn, 4, 3, 16, 0.3, g->get_action_size());
+  MCTS m(nn, NUM_MCT_THREADS, C_PUCT, NUM_MCT_SIMS, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
   std::pair<int,int> game_state;
   game_state = g->get_game_status();
   std::cout << "begin !!" << std::endl;

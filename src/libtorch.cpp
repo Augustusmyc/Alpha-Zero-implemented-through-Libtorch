@@ -136,9 +136,9 @@ NeuralNetwork::NeuralNetwork(unsigned int batch_size)
       //optimizer(this->module->parameters(), torch::optim::AdamOptions(2e-4)),
       loop(nullptr) {
   module = std::make_shared<AlphaZeroNet>(
-  AlphaZeroNet(/*num_layers=*/4,/*num_channels=*/256,/*n=*/BORAD_SIZE,/*action_size=*/BORAD_SIZE * BORAD_SIZE));
+  AlphaZeroNet(/*num_layers=*/NUM_LAYERS,/*num_channels=*/NUM_CHANNELS,/*n=*/BORAD_SIZE,/*action_size=*/BORAD_SIZE * BORAD_SIZE));
 
-  this->optimizer = new torch::optim::Adam(this->module->parameters(), torch::optim::AdamOptions(2e-4));
+  this->optimizer = new torch::optim::Adam(this->module->parameters(), torch::optim::AdamOptions(LR));
 
   if (USE_GPU) {
     // move to CUDA
@@ -222,6 +222,7 @@ Tensor NeuralNetwork::transorm_gomoku_to_Tensor(Gomoku* gomoku){
 
 void NeuralNetwork::infer() {
     {
+        this->module->eval();
         //torch::NoGradGuard no_grad;
         torch::AutoGradMode enable_grad(false);
   // get inputs
@@ -305,18 +306,18 @@ void NeuralNetwork::train(board_buff_type board_buffer, p_buff_type p_buffer, v_
   //    rand_board_buffer.push_back(board_buffer(rand_order[i]));
   //}
   //board_buffer.clear();
-  int batch_size = 7;
-  std::vector<Tensor> p_tensor(batch_size);
-  for (int pt = 0; pt < size - batch_size; pt += batch_size) {
-      std::cout << "train pt = " << pt << std::endl;
-      Tensor inputs = cat(board_buff_type(board_buffer.begin() + pt, board_buffer.begin() + pt + batch_size), 0);
+  std::vector<Tensor> p_tensor(BATCH_SIZE);
+  this->module->train();
+  for (int pt = 0; pt < size - BATCH_SIZE; pt += BATCH_SIZE) {
+      //std::cout << "train pt = " << pt << std::endl;
+      Tensor inputs = cat(board_buff_type(board_buffer.begin() + pt, board_buffer.begin() + pt + BATCH_SIZE), 0);
 
       //std::cout << "inputs dim = " << inputs.dim() << std::endl;
       //std::cout << "inputs size = " << inputs.size(0) << " " << inputs.size(1) << std::endl;
 
-      Tensor vs = torch::tensor(v_buff_type(v_buffer.begin() + pt, v_buffer.begin() + pt + batch_size)).unsqueeze(1);
+      Tensor vs = torch::tensor(v_buff_type(v_buffer.begin() + pt, v_buffer.begin() + pt + BATCH_SIZE)).unsqueeze(1);
 
-      for (int i = 0; i < batch_size; i++) {
+      for (int i = 0; i < BATCH_SIZE; i++) {
           //v_tensor[i] = torch::tensor(v_buffer[pt + i]);
           p_tensor[i] = torch::tensor(p_buffer[pt + i]).unsqueeze(0);
       }
@@ -334,6 +335,7 @@ void NeuralNetwork::train(board_buff_type board_buffer, p_buff_type p_buffer, v_
       
       //Tensor log_ps, Tensor vs, const Tensor target_ps, const Tensor target_vs
       Tensor loss = alpha_loss(result.first, result.second, ps, vs);
+      std::cout << "loss:" << loss.item() << std::endl;
       loss.backward();
       optimizer->step();
       //delete &inputs;
