@@ -22,7 +22,7 @@ std::pair<int, int> SelfPlay::self_play_for_eval(NeuralNetwork *a, NeuralNetwork
     //int tie = 0;
     MCTS ma(a, NUM_MCT_THREADS, C_PUCT, NUM_MCT_SIMS, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
     MCTS mb(b, NUM_MCT_THREADS, C_PUCT, NUM_MCT_SIMS, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
-    for (int episode = 0; episode < 10; episode++) {
+    for (int episode = 0; episode < 4; episode++) {
         int step = 0;
         auto g = std::make_shared<Gomoku>(BORAD_SIZE, N_IN_ROW, BLACK);
         std::pair<int, int> game_state = g->get_game_status();
@@ -48,10 +48,10 @@ std::pair<int, int> SelfPlay::self_play_for_eval(NeuralNetwork *a, NeuralNetwork
 
 void SelfPlay::play(){
   auto g = std::make_shared<Gomoku>(BORAD_SIZE, N_IN_ROW, BLACK);
-  MCTS m(nn, NUM_MCT_THREADS, C_PUCT, NUM_MCT_SIMS, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
+  MCTS *m = new MCTS(nn, NUM_MCT_THREADS, C_PUCT, NUM_MCT_SIMS, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
   std::pair<int,int> game_state;
   game_state = g->get_game_status();
-  std::cout << "begin !!" << std::endl;
+  //std::cout << "begin !!" << std::endl;
   int step = 0;
   board_buff_type *cur_board_buffer = new board_buff_type();
   v_buff_type *cur_color_buff_type = new v_buff_type();
@@ -60,12 +60,33 @@ void SelfPlay::play(){
   while (game_state.first == 0) {
     //int res = m.get_best_action(g.get());
     double temp = step < 10 ? 1 : 0;
-    auto action_probs = m.get_action_probs(g.get(), temp);
+    auto action_probs = m->get_action_probs(g.get(), temp);
     cur_p_buffer->emplace_back(action_probs);
     cur_board_buffer->emplace_back(NeuralNetwork::transorm_gomoku_to_Tensor(g.get()));
     cur_color_buff_type->emplace_back(g->get_current_color());
-    int res = m.get_action_by_sample(action_probs);
-    m.update_with_move(res);
+
+
+
+    // diri noise
+    static std::gamma_distribution<float> gamma(0.3f, 1.0f);
+    static std::default_random_engine rng(std::time(nullptr));
+    std::vector<int> lm = g->get_legal_moves();
+    float sum = 0;
+    for (unsigned int i = 0; i < lm.size(); i++) {
+        if (lm[i]) {
+            action_probs[i] += DIRI * gamma(rng);
+            sum += action_probs[i];
+        }
+    }
+    for (unsigned int i = 0; i < lm.size(); i++) {
+        if (lm[i]) {
+            action_probs[i] /= sum;
+        }
+    }
+
+
+    int res = m->get_action_by_sample(action_probs);
+    m->update_with_move(res);
     g->execute_move(res);
     game_state = g->get_game_status();
     step++;

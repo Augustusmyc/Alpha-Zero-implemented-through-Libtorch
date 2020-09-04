@@ -52,6 +52,7 @@ class MCTS {
   int get_action_by_sample(std::vector<double> action_probs);
   int get_best_action(Gomoku *gomoku);
   void update_with_move(int last_move);
+  unsigned int action_size;
 
  private:
   std::default_random_engine rnd_eng;
@@ -64,7 +65,7 @@ class MCTS {
   std::unique_ptr<ThreadPool> thread_pool;
   NeuralNetwork *neural_network;
 
-  unsigned int action_size;
+  
   unsigned int num_mcts_sims;
   double c_puct;
   double c_virtual_loss;

@@ -12,10 +12,11 @@
 // mcts
 #define ACTIONSIZE = BORAD_SIZE*BORAD_SIZE
 #define USE_GPU true
-#define NUM_MCT_THREADS 1
-#define NUM_MCT_SIMS 7
-#define C_PUCT 5
-#define C_VIRTUAL_LOSS 3
+#define NUM_MCT_THREADS 4
+#define NUM_MCT_SIMS 160
+#define C_PUCT 3
+#define C_VIRTUAL_LOSS 0.3
+#define DIRI 0.5
 
 
 // neural_network
@@ -26,7 +27,7 @@
 #define EPOCHS 1.5
 #define BATCH_SIZE 32 //512
 
-#define NUM_TRAIN_THREADS 1
+#define NUM_TRAIN_THREADS 10
 
 
 #include <libtorch.h>
