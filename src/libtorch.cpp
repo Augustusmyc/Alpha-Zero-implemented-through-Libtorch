@@ -20,7 +20,7 @@ nn::Conv2d conv3x3(int64_t in_channels, int64_t out_channels, unsigned int strid
   return nn::Conv2d(nn::Conv2dOptions(/*in_channel=*/in_channels, out_channels, /*kernel_size=*/3).stride(stride).padding(1).bias(false));
 }
 
-static inline Tensor alpha_loss(Tensor log_ps, Tensor vs, const Tensor target_ps, const Tensor target_vs){
+static inline Tensor alpha_loss(Tensor &log_ps, Tensor &vs, const Tensor &target_ps, const Tensor &target_vs){
   return mean(pow(vs - target_vs, 2)) - mean(sum(target_ps * log_ps, 1)); // value_loss + policy_loss
 }
 
@@ -225,8 +225,8 @@ Tensor NeuralNetwork::transorm_gomoku_to_Tensor(Gomoku* gomoku){
 void NeuralNetwork::infer() {
     {
         this->module->eval();
-        //torch::NoGradGuard no_grad;
-        torch::AutoGradMode enable_grad(false);
+        torch::NoGradGuard no_grad;
+        //torch::AutoGradMode enable_grad(false);
   // get inputs
   std::vector<torch::Tensor> states;
   std::vector<std::promise<return_type>> promises;
@@ -246,7 +246,7 @@ void NeuralNetwork::infer() {
 
       } else {
         // timeout
-        // std::cout << "timeout" << std::endl;
+        //std::cout << "timeout" << std::endl;
         timeout = true;
       }
     }
@@ -312,6 +312,7 @@ void NeuralNetwork::train(board_buff_type board_buffer, p_buff_type p_buffer, v_
   //board_buffer.clear();
   std::vector<Tensor> p_tensor(BATCH_SIZE);
   this->module->train();
+  torch::AutoGradMode enable_grad(true);
   for (int pt = 0; pt < size - BATCH_SIZE; pt += BATCH_SIZE) {
       //std::cout << "train pt = " << pt << std::endl;
       Tensor inputs = cat(board_buff_type(board_buffer.begin() + pt, board_buffer.begin() + pt + BATCH_SIZE), 0);
@@ -338,6 +339,7 @@ void NeuralNetwork::train(board_buff_type board_buffer, p_buff_type p_buffer, v_
 
       
       //Tensor log_ps, Tensor vs, const Tensor target_ps, const Tensor target_vs
+      //torch::binary_cross_entropy
       Tensor loss = alpha_loss(result.first, result.second, ps, vs);
       std::cout << "loss:" << loss.item() << std::endl;
       loss.backward();

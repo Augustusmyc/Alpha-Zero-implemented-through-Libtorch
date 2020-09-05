@@ -8,6 +8,9 @@
 #include <play.h>
 #include <common.h>
 
+using namespace std;
+using namespace torch;
+
 int main() {
 
     // system("mkdir weights");
@@ -17,8 +20,8 @@ int main() {
     system("mkdir ./weights");
     #endif
 
-    NeuralNetwork* model = new NeuralNetwork(BATCH_SIZE);
-    NeuralNetwork* old_best_model = new NeuralNetwork(BATCH_SIZE);
+    NeuralNetwork* model = new NeuralNetwork(NUM_MCT_THREADS*NUM_MCT_SIMS);
+    NeuralNetwork* old_best_model = new NeuralNetwork(NUM_MCT_THREADS * NUM_MCT_SIMS);
     model->save_weights("./weights/0.pt");
     int best_weight = 0;
     //torch::optim::SGD optimizer(model->module->parameters(), /*lr=*/0.01);
@@ -42,7 +45,7 @@ int main() {
 
         auto win_table = sp->self_play_for_eval(old_best_model, model);
         std::cout << "old win:" << win_table.first << " & new win:" << win_table.second << std::endl;
-        if (win_table.second > win_table.first + 2) {
+        if (win_table.second > win_table.first) {
             std::cout << "New best model generated!!" << " Current weight = " << current_weight << std::endl;
             int best_weight = current_weight;
         }
