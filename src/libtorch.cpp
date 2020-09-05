@@ -7,8 +7,10 @@
 #include <common.h>
 #include <random>
 
-//#include <torch/script.h> // One-stop header.
+#ifdef USE_GPU
 #include <c10/cuda/CUDACachingAllocator.h>
+#endif
+
 
 using namespace std::chrono_literals;
 using namespace torch;
@@ -80,11 +82,11 @@ AlphaZeroNet::AlphaZeroNet(const unsigned int num_layers, int64_t num_channels, 
     for (unsigned int i = 1; i<num_layers; i++){
         res_list[i] = ResidualBlock(num_channels, num_channels);
      }
-    if (USE_GPU) {
+#ifdef USE_GPU
         for (unsigned int i = 0; i < num_layers; i++) {
             res_list[i].to(torch::kCUDA);
         }
-    }
+#endif   
     res_layers = nn::Sequential(*res_list);
 
     //  policy head
@@ -140,10 +142,10 @@ NeuralNetwork::NeuralNetwork(unsigned int batch_size)
 
   this->optimizer = new torch::optim::Adam(this->module->parameters(), torch::optim::AdamOptions(LR));
 
-  if (USE_GPU) {
+#ifdef USE_GPU
     // move to CUDA
     this->module->to(at::kCUDA);
-  }
+#endif
 
    //this->optimizer(this->module->parameters(), torch::optim::AdamOptions(2e-4).beta1(0.5));
    //auto optimizer = torch::optim::Adam(this->module->parameters(), 0.01);
@@ -254,9 +256,11 @@ void NeuralNetwork::infer() {
   if (states.size() == 0) {
     return;
   }
-
-  Tensor inputs = USE_GPU ? cat(states, 0).to(at::kCUDA) : cat(states, 0);
-  
+#ifdef USE_GPU
+  Tensor inputs = cat(states, 0).to(at::kCUDA)
+#else
+  Tensor inputs = cat(states, 0);
+#endif
 
    auto result = this->module->forward(inputs);
    //std::cout << y.requires_grad() << std::endl; // prints `false`
@@ -325,11 +329,11 @@ void NeuralNetwork::train(board_buff_type board_buffer, p_buff_type p_buffer, v_
       Tensor ps = cat(p_tensor, 0);
       //Tensor vs = cat(v_tensor, 0);
       optimizer->zero_grad();
-      if (USE_GPU) {
+#ifdef USE_GPU
           inputs = inputs.to(kCUDA);
           ps = ps.to(kCUDA);
           vs = vs.to(kCUDA);
-      }
+#endif
       auto result = this->module->forward(inputs);
 
       
@@ -345,5 +349,7 @@ void NeuralNetwork::train(board_buff_type board_buffer, p_buff_type p_buffer, v_
   board_buffer.clear();
   p_buffer.clear();
   v_buffer.clear();
+#ifdef USE_GPU
   c10::cuda::CUDACachingAllocator::emptyCache();
+#endif
 }

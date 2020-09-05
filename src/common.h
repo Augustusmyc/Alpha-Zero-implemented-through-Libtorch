@@ -3,7 +3,6 @@
 
 #define WHITE -BLACK
 
-
 // gomoku
 #define BORAD_SIZE 3
 #define N_IN_ROW 3
@@ -11,7 +10,7 @@
 
 // mcts
 #define ACTIONSIZE = BORAD_SIZE*BORAD_SIZE
-#define USE_GPU true
+//#define USE_GPU
 #define NUM_MCT_THREADS 1
 #define NUM_MCT_SIMS 7
 #define C_PUCT 5
@@ -21,10 +20,10 @@
 // neural_network
 #define LR 0.001
 #define L2 0.0001
-#define NUM_CHANNELS 256
-#define NUM_LAYERS 4
+#define NUM_CHANNELS 16 //256
+#define NUM_LAYERS 2 //4
 #define EPOCHS 1.5
-#define BATCH_SIZE 32 //512
+#define BATCH_SIZE 3 //512
 
 #define NUM_TRAIN_THREADS 1
 

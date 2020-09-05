@@ -4,7 +4,9 @@
 #include <common.h>
 #include <libtorch.h>
 
+#ifdef USE_GPU
 #include <c10/cuda/CUDACachingAllocator.h>
+#endif
 
 using namespace customType;
 
@@ -40,7 +42,10 @@ std::pair<int, int> SelfPlay::self_play_for_eval(NeuralNetwork *a, NeuralNetwork
         if ((game_state.second == BLACK && episode % 2 == 0) || (game_state.second == WHITE && episode % 2 == 1)) a_win_count++;
         else if ((game_state.second == BLACK && episode % 2 == 1) || (game_state.second == WHITE && episode % 2 == 0)) b_win_count++;
         //else if (game_state.second == 0) tie++;
+#ifdef USE_GPU
         c10::cuda::CUDACachingAllocator::emptyCache();
+#endif
+        
     }
     return { a_win_count ,b_win_count };
 }
