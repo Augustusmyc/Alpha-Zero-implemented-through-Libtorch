@@ -11,17 +11,13 @@
 #include <c10/cuda/CUDACachingAllocator.h>
 #endif
 
-
+using namespace customType;
 using namespace std::chrono_literals;
 using namespace torch;
-using namespace customType;
+
 
 nn::Conv2d conv3x3(int64_t in_channels, int64_t out_channels, unsigned int stride=1){
   return nn::Conv2d(nn::Conv2dOptions(/*in_channel=*/in_channels, out_channels, /*kernel_size=*/3).stride(stride).padding(1).bias(false));
-}
-
-static inline Tensor alpha_loss(Tensor &log_ps, Tensor &vs, const Tensor &target_ps, const Tensor &target_vs){
-  return mean(pow(vs - target_vs, 2)) - mean(sum(target_ps * log_ps, 1)); // value_loss + policy_loss
 }
 
 struct ResidualBlock:nn::Module {
@@ -140,7 +136,7 @@ NeuralNetwork::NeuralNetwork(unsigned int batch_size)
   module = std::make_shared<AlphaZeroNet>(
   AlphaZeroNet(/*num_layers=*/NUM_LAYERS,/*num_channels=*/NUM_CHANNELS,/*n=*/BORAD_SIZE,/*action_size=*/BORAD_SIZE * BORAD_SIZE));
 
-  this->optimizer = new torch::optim::Adam(this->module->parameters(), torch::optim::AdamOptions(LR));
+  //this->optimizer = new torch::optim::Adam(this->module->parameters(), torch::optim::AdamOptions(LR));
 
 #ifdef USE_GPU
     // move to CUDA
@@ -285,73 +281,73 @@ void NeuralNetwork::infer() {
   }
 }
 
-void NeuralNetwork::train(board_buff_type board_buffer, p_buff_type p_buffer, v_buff_type v_buffer){
-    int size = board_buffer.size();
-    unsigned seed = rand();
-        //std::chrono::system_clock::now().time_since_epoch().count();
-    auto e = std::default_random_engine(seed);
-    shuffle(board_buffer.begin(), board_buffer.end(), e);
-    e = std::default_random_engine(seed);
-    shuffle(p_buffer.begin(), p_buffer.end(), e);
-    e = std::default_random_engine(seed);
-    shuffle(v_buffer.begin(), v_buffer.end(), e);
-
-    //std::random_shuffle(board_buffer.begin(), board_buffer.end());
-    //board_buff_type rand_board_buffer = CustomType::board_buff_type(size);
-    //std::vector<int> rand_order(size);
-    //for (int i = 0; i < size; i++) {
-    //    rand_order.push_back (i);
-    //}
-    //std::random_shuffle(rand_order.begin(), rand_order.end());
-    //std::sort(board_buffer.begin(), board_buffer.end(), rand_order);
-    //unsigned seed = std::chrono::system_clock::now ().time_since_epoch ().count();
-    //std::shuffle (rand_order.begin (), rand_order.end (), std::default_random_engine(seed));
-  //for (int i = 0; i < size; i++) {
-  //    rand_board_buffer.push_back(board_buffer(rand_order[i]));
-  //}
-  //board_buffer.clear();
-  std::vector<Tensor> p_tensor(BATCH_SIZE);
-  this->module->train();
-  torch::AutoGradMode enable_grad(true);
-  for (int pt = 0; pt < size - BATCH_SIZE; pt += BATCH_SIZE) {
-      //std::cout << "train pt = " << pt << std::endl;
-      Tensor inputs = cat(board_buff_type(board_buffer.begin() + pt, board_buffer.begin() + pt + BATCH_SIZE), 0);
-
-      //std::cout << "inputs dim = " << inputs.dim() << std::endl;
-      //std::cout << "inputs size = " << inputs.size(0) << " " << inputs.size(1) << std::endl;
-
-      Tensor vs = torch::tensor(v_buff_type(v_buffer.begin() + pt, v_buffer.begin() + pt + BATCH_SIZE)).unsqueeze(1);
-
-      for (int i = 0; i < BATCH_SIZE; i++) {
-          //v_tensor[i] = torch::tensor(v_buffer[pt + i]);
-          p_tensor[i] = torch::tensor(p_buffer[pt + i]).unsqueeze(0);
-      }
-      //std::cout << "vector size = " << p_tensor.size() << std::endl;
-      Tensor ps = cat(p_tensor, 0);
-      //Tensor vs = cat(v_tensor, 0);
-      optimizer->zero_grad();
-#ifdef USE_GPU
-          inputs = inputs.to(kCUDA);
-          ps = ps.to(kCUDA);
-          vs = vs.to(kCUDA);
-#endif
-      auto result = this->module->forward(inputs);
-
-      
-      //Tensor log_ps, Tensor vs, const Tensor target_ps, const Tensor target_vs
-      //torch::binary_cross_entropy
-      Tensor loss = alpha_loss(result.first, result.second, ps, vs);
-      std::cout << "loss:" << loss.item() << std::endl;
-      loss.backward();
-      optimizer->step();
-      //delete &inputs;
-      //delete &ps;
-      //delete &vs;
-  }
-  board_buffer.clear();
-  p_buffer.clear();
-  v_buffer.clear();
-#ifdef USE_GPU
-  c10::cuda::CUDACachingAllocator::emptyCache();
-#endif
-}
+//void NeuralNetwork::train(board_buff_type board_buffer, p_buff_type p_buffer, v_buff_type v_buffer){
+//    int size = board_buffer.size();
+//    unsigned seed = rand();
+//        //std::chrono::system_clock::now().time_since_epoch().count();
+//    auto e = std::default_random_engine(seed);
+//    shuffle(board_buffer.begin(), board_buffer.end(), e);
+//    e = std::default_random_engine(seed);
+//    shuffle(p_buffer.begin(), p_buffer.end(), e);
+//    e = std::default_random_engine(seed);
+//    shuffle(v_buffer.begin(), v_buffer.end(), e);
+//
+//    //std::random_shuffle(board_buffer.begin(), board_buffer.end());
+//    //board_buff_type rand_board_buffer = CustomType::board_buff_type(size);
+//    //std::vector<int> rand_order(size);
+//    //for (int i = 0; i < size; i++) {
+//    //    rand_order.push_back (i);
+//    //}
+//    //std::random_shuffle(rand_order.begin(), rand_order.end());
+//    //std::sort(board_buffer.begin(), board_buffer.end(), rand_order);
+//    //unsigned seed = std::chrono::system_clock::now ().time_since_epoch ().count();
+//    //std::shuffle (rand_order.begin (), rand_order.end (), std::default_random_engine(seed));
+//  //for (int i = 0; i < size; i++) {
+//  //    rand_board_buffer.push_back(board_buffer(rand_order[i]));
+//  //}
+//  //board_buffer.clear();
+//  std::vector<Tensor> p_tensor(BATCH_SIZE);
+//  this->module->train();
+//  torch::AutoGradMode enable_grad(true);
+//  for (int pt = 0; pt < size - BATCH_SIZE; pt += BATCH_SIZE) {
+//      //std::cout << "train pt = " << pt << std::endl;
+//      Tensor inputs = cat(board_buff_type(board_buffer.begin() + pt, board_buffer.begin() + pt + BATCH_SIZE), 0);
+//
+//      //std::cout << "inputs dim = " << inputs.dim() << std::endl;
+//      //std::cout << "inputs size = " << inputs.size(0) << " " << inputs.size(1) << std::endl;
+//
+//      Tensor vs = torch::tensor(v_buff_type(v_buffer.begin() + pt, v_buffer.begin() + pt + BATCH_SIZE)).unsqueeze(1);
+//
+//      for (int i = 0; i < BATCH_SIZE; i++) {
+//          //v_tensor[i] = torch::tensor(v_buffer[pt + i]);
+//          p_tensor[i] = torch::tensor(p_buffer[pt + i]).unsqueeze(0);
+//      }
+//      //std::cout << "vector size = " << p_tensor.size() << std::endl;
+//      Tensor ps = cat(p_tensor, 0);
+//      //Tensor vs = cat(v_tensor, 0);
+//      optimizer->zero_grad();
+//#ifdef USE_GPU
+//          inputs = inputs.to(kCUDA);
+//          ps = ps.to(kCUDA);
+//          vs = vs.to(kCUDA);
+//#endif
+//      auto result = this->module->forward(inputs);
+//
+//      
+//      //Tensor log_ps, Tensor vs, const Tensor target_ps, const Tensor target_vs
+//      //torch::binary_cross_entropy
+//      Tensor loss = alpha_loss(result.first, result.second, ps, vs);
+//      std::cout << "loss:" << loss.item() << std::endl;
+//      loss.backward();
+//      optimizer->step();
+//      //delete &inputs;
+//      //delete &ps;
+//      //delete &vs;
+//  }
+//  board_buffer.clear();
+//  p_buffer.clear();
+//  v_buffer.clear();
+//#ifdef USE_GPU
+//  c10::cuda::CUDACachingAllocator::emptyCache();
+//#endif
+//}

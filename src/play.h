@@ -20,14 +20,16 @@ class SelfPlay{
     public:
         SelfPlay(NeuralNetwork *nn);
         //~SelfPlay();
-        std::tuple<board_buff_type, p_buff_type, v_buff_type> self_play_for_train(unsigned int game_num);
         std::pair<int,int> self_play_for_eval(NeuralNetwork *a, NeuralNetwork *b);
+        void play(unsigned int id);
+
+        void self_play_for_train(unsigned int game_num, unsigned int start_batch_id);
         
     private:
-        p_buff_type *p_buffer;
-        board_buff_type *board_buffer;
-        v_buff_type *v_buffer;
-        void play();
+        //p_buff_type *p_buffer;
+        //board_buff_type *board_buffer;
+        //v_buff_type *v_buffer;
+        
         NeuralNetwork *nn;
         std::unique_ptr<ThreadPool> thread_pool;
         //std::queue<task_type> tasks;  // tasks queue

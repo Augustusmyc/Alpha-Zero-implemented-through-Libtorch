@@ -37,11 +37,11 @@ if(UNIT_TEST)
     #add_executable(thread_pool_test ./test/thread_pool_test.cpp)
     #target_link_libraries(thread_pool_test ${TORCH_LIBRARIES})
 
-    # add_executable(gomoku_test ./test/gomoku_test.cpp)
-    # target_link_libraries(gomoku_test test_lib)
+    #add_executable(gomoku_test ./test/gomoku_test.cpp)
+    #target_link_libraries(gomoku_test test_lib)
 
-    # add_executable(libtorch_test ./test/libtorch_test.cpp)
-    # target_link_libraries(libtorch_test test_lib)
+    #add_executable(libtorch_test ./test/libtorch_test.cpp)
+    #target_link_libraries(libtorch_test test_lib)
 
     add_executable(mcts_test ./test/mcts_test.cpp)   # play game with human
     target_link_libraries(mcts_test test_lib)

@@ -2,11 +2,13 @@
 
 #include <tuple>
 #include <vector>
+#include<common.h>
+
+using namespace customType;
 
 class Gomoku {
 public:
   using move_type = int;
-  using board_type = std::vector<std::vector<int>>;
 
   Gomoku(const unsigned int n, const unsigned int n_in_row, int first_color);
 

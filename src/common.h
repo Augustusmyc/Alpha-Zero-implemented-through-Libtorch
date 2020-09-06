@@ -9,9 +9,9 @@
 #define BLACK 1
 
 // mcts
-#define ACTIONSIZE = BORAD_SIZE*BORAD_SIZE
+//#define ACTIONSIZE = BORAD_SIZE*BORAD_SIZE
 //#define USE_GPU
-#define NUM_MCT_THREADS 1
+#define NUM_MCT_THREADS 2 // 4
 #define NUM_MCT_SIMS 7
 #define C_PUCT 5
 #define C_VIRTUAL_LOSS 3
@@ -22,16 +22,18 @@
 #define L2 0.0001
 #define NUM_CHANNELS 16 //256
 #define NUM_LAYERS 2 //4
-#define EPOCHS 1.5
+//#define EPOCHS 1.5
 #define BATCH_SIZE 3 //512
+#define DIRI 0.5
 
-#define NUM_TRAIN_THREADS 1
+#define NUM_TRAIN_THREADS 8
 
+#define BUFFER_LEN BORAD_SIZE*BORAD_SIZE+1
+#define NUM_DATA_GENERATION 3
 
-#include <libtorch.h>
-using namespace torch;
 namespace customType {
     using v_buff_type = std::vector<int>;
-    using p_buff_type = std::vector<std::vector<double>>;
-    using board_buff_type = std::vector<Tensor>;
+    using p_buff_type = std::vector<std::vector<float>>;
+    using board_type = std::vector<std::vector<int>>;
+    using board_buff_type = std::vector<board_type>;;
 }

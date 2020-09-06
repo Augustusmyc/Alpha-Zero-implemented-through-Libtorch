@@ -14,7 +14,7 @@
 #include <common.h>
 
 using namespace torch;
-using namespace customType;
+//using namespace customType;
 
 
 
@@ -44,15 +44,16 @@ class NeuralNetwork {
 
   void save_weights(string model_path);
   void load_weights(string model_path);
-  void train(board_buff_type board_buffer, p_buff_type p_buffer, v_buff_type v_buffer);
+  //void train(board_buff_type board_buffer, p_buff_type p_buffer, v_buff_type v_buffer);
 
   std::future<return_type> commit(Gomoku* gomoku);  // commit task to queue
   //std::shared_ptr<torch::jit::script::Module> module;  // torch module    origin:private
   static Tensor transorm_gomoku_to_Tensor(Gomoku* gomoku);
+  unsigned int batch_size;                             // batch size
 
  private:
   using task_type = std::pair<Tensor, std::promise<return_type>>;
-  optim::Adam *optimizer;
+  //optim::Adam *optimizer;
   std::shared_ptr<AlphaZeroNet> module;
   
 
@@ -67,5 +68,5 @@ class NeuralNetwork {
   std::condition_variable cv;   // condition variable for tasks queue
 
   
-  unsigned int batch_size;                             // batch size
+
 };

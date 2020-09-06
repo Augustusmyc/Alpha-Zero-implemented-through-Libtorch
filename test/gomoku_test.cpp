@@ -53,5 +53,5 @@ int main() {
 
   // test get_game_status
   auto game_status = gomoku.get_game_status();
-  std::cout << game_status[0] << ", " << game_status[1] << std::endl;
+  std::cout << game_status.first << ", " << game_status.second << std::endl;
 }
