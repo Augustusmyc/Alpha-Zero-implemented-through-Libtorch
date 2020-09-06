@@ -22,38 +22,6 @@ SelfPlay::SelfPlay(NeuralNetwork *nn):
         thread_pool(new ThreadPool(NUM_TRAIN_THREADS))
         {}
 
-//std::pair<int, int> SelfPlay::self_play_for_eval(NeuralNetwork *a, NeuralNetwork *b) {
-//    int a_win_count = 0;
-//    int b_win_count = 0;
-//    //int tie = 0;
-//    MCTS ma(a, NUM_MCT_THREADS, C_PUCT, NUM_MCT_SIMS, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
-//    MCTS mb(b, NUM_MCT_THREADS, C_PUCT, NUM_MCT_SIMS, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
-//    for (int episode = 0; episode < 4; episode++) {
-//        int step = 0;
-//        auto g = std::make_shared<Gomoku>(BORAD_SIZE, N_IN_ROW, BLACK);
-//        std::pair<int, int> game_state = g->get_game_status();
-//        //std::cout << episode << " th game!!" << std::endl;
-//        while (game_state.first == 0) {
-//            bool cur_net = (step + episode) % 2 == 0;
-//            int res = cur_net ? ma.get_best_action(g.get()) : mb.get_best_action(g.get());
-//            ma.update_with_move(res);
-//            mb.update_with_move(res);
-//            g->execute_move(res);
-//            game_state = g->get_game_status();
-//            step++;
-//        }
-//        cout << "eval: total step num = " << step << endl;
-//        if ((game_state.second == BLACK && episode % 2 == 0) || (game_state.second == WHITE && episode % 2 == 1)) a_win_count++;
-//        else if ((game_state.second == BLACK && episode % 2 == 1) || (game_state.second == WHITE && episode % 2 == 0)) b_win_count++;
-//        //else if (game_state.second == 0) tie++;
-//#ifdef USE_GPU
-//        c10::cuda::CUDACachingAllocator::emptyCache();
-//#endif
-//        
-//    }
-//    return { a_win_count ,b_win_count };
-//}
-
 
 void SelfPlay::play(unsigned int id){
   auto g = std::make_shared<Gomoku>(BORAD_SIZE, N_IN_ROW, BLACK);
@@ -71,7 +39,7 @@ void SelfPlay::play(unsigned int id){
 
   while (game_state.first == 0) {
       //int res = m.get_best_action(g.get());
-        double temp = step < 10 ? 1 : 0;
+        double temp = step < EXPLORE_STEP ? 1 : 0;
         auto action_probs = m->get_action_probs(g.get(), temp);
         board_type board = g->get_board();
         for (int i = 0; i < BORAD_SIZE * BORAD_SIZE; i++) {
@@ -133,30 +101,28 @@ void SelfPlay::play(unsigned int id){
       bestand.close();
 
       //just val
-      ifstream inlezen;
-      int new_step;
-      inlezen.open("./data/data_"+str(id), ios::in | ios::binary);
-      inlezen.read(reinterpret_cast<char*>(&new_step), sizeof(int));
+      //ifstream inlezen;
+      //int new_step;
+      //inlezen.open("./data/data_"+str(id), ios::in | ios::binary);
+      //inlezen.read(reinterpret_cast<char*>(&new_step), sizeof(int));
 
-      board_buff_type new_board_buffer(new_step, vector<vector<int>>(BORAD_SIZE, vector<int>(BORAD_SIZE)));
-      p_buff_type new_p_buffer(new_step, vector<float>(BORAD_SIZE * BORAD_SIZE));
-      v_buff_type new_v_buffer(new_step);
+      //board_buff_type new_board_buffer(new_step, vector<vector<int>>(BORAD_SIZE, vector<int>(BORAD_SIZE)));
+      //p_buff_type new_p_buffer(new_step, vector<float>(BORAD_SIZE * BORAD_SIZE));
+      //v_buff_type new_v_buffer(new_step);
 
-      for (int i = 0; i < step; i++) {
-          for (int j = 0; j < BORAD_SIZE; j++) {
-              inlezen.read(reinterpret_cast<char*>(&new_board_buffer[i][j][0]), BORAD_SIZE * sizeof(int));
-          }
-      }
+      //for (int i = 0; i < step; i++) {
+      //    for (int j = 0; j < BORAD_SIZE; j++) {
+      //        inlezen.read(reinterpret_cast<char*>(&new_board_buffer[i][j][0]), BORAD_SIZE * sizeof(int));
+      //    }
+      //}
 
-      for (int i = 0; i < step; i++) {
-          inlezen.read(reinterpret_cast<char*>(&new_p_buffer[i][0]), BORAD_SIZE * BORAD_SIZE * sizeof(float));
-      }
+      //for (int i = 0; i < step; i++) {
+      //    inlezen.read(reinterpret_cast<char*>(&new_p_buffer[i][0]), BORAD_SIZE * BORAD_SIZE * sizeof(float));
+      //}
 
-      inlezen.read(reinterpret_cast<char*>(&new_v_buffer[0]), step * sizeof(int));
+      //inlezen.read(reinterpret_cast<char*>(&new_v_buffer[0]), step * sizeof(int));
   }
 
-
-  //return { *board_buffer , *p_buffer , *cur_color_buff_type };
 
 void SelfPlay::self_play_for_train(unsigned int game_num,unsigned int start_batch_id){
     std::vector<std::future<void>> futures;
@@ -169,7 +135,7 @@ void SelfPlay::self_play_for_train(unsigned int game_num,unsigned int start_batc
         futures[i].wait();
        
         this->nn->batch_size = max((unsigned)1, (game_num - i) * NUM_MCT_THREADS);
-        cout << "end" << endl;
+       // cout << "end" << endl;
     }
     //return { *this->board_buffer , *this->p_buffer ,*this->v_buffer };
 }

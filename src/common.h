@@ -13,8 +13,9 @@
 //#define USE_GPU
 #define NUM_MCT_THREADS 2 // 4
 #define NUM_MCT_SIMS 7
-#define C_PUCT 5
-#define C_VIRTUAL_LOSS 3
+#define C_PUCT 1 //5
+#define C_VIRTUAL_LOSS 0.3 //3
+#define EXPLORE_STEP 3
 
 
 // neural_network
@@ -23,13 +24,13 @@
 #define NUM_CHANNELS 16 //256
 #define NUM_LAYERS 2 //4
 //#define EPOCHS 1.5
-#define BATCH_SIZE 3 //512
+#define BATCH_SIZE 256 //512
 #define DIRI 0.5
 
-#define NUM_TRAIN_THREADS 8
+#define NUM_TRAIN_THREADS 10
 
 #define BUFFER_LEN BORAD_SIZE*BORAD_SIZE+1
-#define NUM_DATA_GENERATION 3
+#define NUM_DATA_GENERATION 70
 
 namespace customType {
     using v_buff_type = std::vector<int>;

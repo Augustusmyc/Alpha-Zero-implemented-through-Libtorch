@@ -129,7 +129,7 @@ void Gomoku::display() const {
 void Gomoku::render() {
     std::ostringstream out;
     auto n = this->board.size();
-    out << "step ?" << std::endl;
+    //out << "step ?" << std::endl;
 
     const int cell_size = 3;
     const int row_size = (cell_size + 1) * n + 1;

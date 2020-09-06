@@ -17,20 +17,7 @@ static inline Tensor alpha_loss(Tensor& log_ps, Tensor& vs, const Tensor& target
 
 void generate_data_for_train(int current_weight, int data_batch_num, int start_batch_id) {
     NeuralNetwork* model = new NeuralNetwork(NUM_MCT_THREADS * NUM_MCT_SIMS);
-    if (current_weight == 0) {
-        // system("mkdir weights");
-        #ifdef _WIN32
-        system("mkdir .\\weights");
-        system("mkdir .\\data");
-        #elif __linux__
-        system("mkdir ./weights");
-        system("mkdir ./data");
-        #endif
-        model->save_weights("./weights/0.pt");
-    }
-    else {
-        model->load_weights("./weights/"+str(current_weight)+".pt");
-    }
+    model->load_weights("./weights/"+str(current_weight)+".pt");
     SelfPlay* sp = new SelfPlay(model);
     sp->self_play_for_train(NUM_TRAIN_THREADS, start_batch_id);
 }
@@ -197,6 +184,7 @@ std::pair<int, int> eval(int current_weight, int best_weight) {
             ma.update_with_move(res);
             mb.update_with_move(res);
             g->execute_move(res);
+            g->render();
             game_state = g->get_game_status();
             step++;
         }
@@ -220,10 +208,40 @@ std::pair<int, int> eval(int current_weight, int best_weight) {
 }
 
 int main() {
-    int current_weight = 0;
-    int best_weight = 0;
 
-    while (true) {
+    int current_weight;
+    int best_weight;
+
+    ifstream logger_reader("current_and_best_weight.txt");
+
+    if (!logger_reader.is_open())
+    {
+        cout << "train from scratch" << endl;
+        // system("mkdir weights");
+        #ifdef _WIN32
+                system("mkdir .\\weights");
+                system("mkdir .\\data");
+        #elif __linux__
+                system("mkdir ./weights");
+                system("mkdir ./data");
+        #endif
+
+        NeuralNetwork* model = new NeuralNetwork(NUM_MCT_THREADS * NUM_MCT_SIMS);
+        model->save_weights("./weights/0.pt");
+        current_weight = 0;
+        best_weight = 0;
+    }else {
+        logger_reader >> current_weight;
+        logger_reader >> best_weight;
+       // logger_reader >> temp[1];
+        cout << "current_weight = " << current_weight << " and best_weight = " << best_weight << endl;
+    }
+    logger_reader.close();
+
+
+
+
+ //   while (true) {
         for (int i = 0; i < NUM_DATA_GENERATION; i++) {
             generate_data_for_train(current_weight, NUM_TRAIN_THREADS, i * NUM_TRAIN_THREADS);
         }
@@ -231,12 +249,18 @@ int main() {
         current_weight++;
         std::pair<int, int> result = eval(current_weight, best_weight);
         if (result.first > result.second) {
-            cout << "new best id = " << current_weight << endl;
+            cout << "!!!!! new best id = " << current_weight << endl;
             best_weight = current_weight;
         }
-        system("rm ./data/*");
+ //       //system("rm ./data/*");
+    ofstream logger_writer("current_and_best_weight.txt");
+    logger_writer << current_weight;
+    logger_writer << " ";
+    logger_writer << best_weight;
+    logger_writer.close();
+
     #ifdef USE_GPU
         c10::cuda::CUDACachingAllocator::emptyCache();
     #endif
-    }
+  //  }
 }
