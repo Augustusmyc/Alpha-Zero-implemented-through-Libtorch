@@ -253,7 +253,7 @@ void NeuralNetwork::infer() {
     return;
   }
 #ifdef USE_GPU
-  Tensor inputs = cat(states, 0).to(at::kCUDA)
+  Tensor inputs = cat(states, 0).to(at::kCUDA);
 #else
   Tensor inputs = cat(states, 0);
 #endif

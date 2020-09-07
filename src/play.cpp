@@ -7,9 +7,9 @@
 #include<iostream>
 #include<fstream>
 
-#ifdef USE_GPU
-#include <c10/cuda/CUDACachingAllocator.h>
-#endif
+//#ifdef USE_GPU
+//#include <c10/cuda/CUDACachingAllocator.h>
+//#endif
 
 using namespace customType;
 using namespace std;

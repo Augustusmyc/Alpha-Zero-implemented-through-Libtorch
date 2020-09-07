@@ -44,9 +44,9 @@ int main(int argc, char* argv[]) {
   std::pair<int, int> game_state;
 
   while (true) {
-    int res = m.get_best_action(g.get());
-    m.update_with_move(res);
-    g->execute_move(res);
+    //int res = m.get_best_action(g.get());
+    //m.update_with_move(res);
+    //g->execute_move(res);
     g->render();
     game_state = g->get_game_status();
     if (game_state.first != 0) break;
@@ -71,6 +71,10 @@ int main(int argc, char* argv[]) {
     g->render();
     game_state = g->get_game_status();
     if (game_state.first != 0) break;
+
+    int res = m.get_best_action(g.get());
+    m.update_with_move(res);
+    g->execute_move(res);
 
 
     // std::for_each(res.begin(), res.end(),

@@ -8,6 +8,10 @@
 #include <play.h>
 #include <common.h>
 
+#ifdef USE_GPU
+#include <c10/cuda/CUDACachingAllocator.h>
+#endif
+
 using namespace std;
 using namespace torch;
 
