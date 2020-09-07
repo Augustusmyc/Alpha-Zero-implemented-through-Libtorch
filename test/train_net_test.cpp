@@ -19,7 +19,7 @@ static inline Tensor alpha_loss(Tensor& log_ps, Tensor& vs, const Tensor& target
     return mean(pow(vs - target_vs, 2)) - mean(sum(target_ps * log_ps, 1)); // value_loss + policy_loss
 }
 
-void generate_data_for_train(int current_weight, int data_batch_num, int start_batch_id) {
+void generate_data_for_train(int current_weight, int start_batch_id) {
     NeuralNetwork* model = new NeuralNetwork(NUM_MCT_THREADS * NUM_MCT_SIMS);
     model->load_weights("./weights/"+str(current_weight)+".pt");
     SelfPlay* sp = new SelfPlay(model);
@@ -211,60 +211,69 @@ std::pair<int, int> eval(int current_weight, int best_weight) {
     return { a_win_count ,b_win_count };
 }
 
-int main() {
 
-    int current_weight;
-    int best_weight;
-
-    ifstream logger_reader("current_and_best_weight.txt");
-
-    if (!logger_reader.is_open())
-    {
+int main(int argc, char* argv[]) {
+    if ((strcmp(argv[1], "generate") == 0) && (strcmp(argv[2], "0") == 0)) {
         cout << "train from scratch" << endl;
         // system("mkdir weights");
-        #ifdef _WIN32
-                system("mkdir .\\weights");
-                system("mkdir .\\data");
-        #elif __linux__
-                system("mkdir ./weights");
-                system("mkdir ./data");
-        #endif
-
+#ifdef _WIN32
+        system("mkdir .\\weights");
+        system("mkdir .\\data");
+#elif __linux__
+        system("mkdir ./weights");
+        system("mkdir ./data");
+#endif
         NeuralNetwork* model = new NeuralNetwork(NUM_MCT_THREADS * NUM_MCT_SIMS);
         model->save_weights("./weights/0.pt");
-        current_weight = 0;
-        best_weight = 0;
-    }else {
+        ofstream logger_writer("current_and_best_weight.txt");
+        logger_writer << 0 << " " << 0;
+        logger_writer.close();
+    }
+
+    if (strcmp(argv[1], "generate") == 0) {
+        int current_weight;
+        int best_weight;
+
+        ifstream logger_reader("current_and_best_weight.txt");
         logger_reader >> current_weight;
         logger_reader >> best_weight;
-       // logger_reader >> temp[1];
-        cout << "current_weight = " << current_weight << " and best_weight = " << best_weight << endl;
-    }
-    logger_reader.close();
-
-
-
-
- //   while (true) {
-        for (int i = 0; i < NUM_DATA_GENERATION; i++) {
-            generate_data_for_train(current_weight, NUM_TRAIN_THREADS, i * NUM_TRAIN_THREADS);
+        if (current_weight < 0) {
+            cout << "LOAD error,check current_and_best_weight.txt" << endl;
+            return -1;
         }
-        train(current_weight, NUM_TRAIN_THREADS * NUM_DATA_GENERATION);
+        // logger_reader >> temp[1];
+        cout << "current_weight = " << current_weight << " and best_weight = " << best_weight << endl;
+        logger_reader.close();
+        generate_data_for_train(current_weight, stoi(str(argv[2]))* NUM_TRAIN_THREADS);
+    }
+    else {
+        int current_weight;
+        int best_weight;
+
+        ifstream logger_reader("current_and_best_weight.txt");
+        logger_reader >> current_weight;
+        logger_reader >> best_weight;
+        // logger_reader >> temp[1];
+        cout << "current_weight = " << current_weight << " and best_weight = " << best_weight << endl;
+        logger_reader.close();
+        train(current_weight, stoi(str(argv[2]))*NUM_TRAIN_THREADS);
         current_weight++;
         std::pair<int, int> result = eval(current_weight, best_weight);
         if (result.first > result.second) {
             cout << "!!!!! new best id = " << current_weight << endl;
             best_weight = current_weight;
         }
- //       //system("rm ./data/*");
-    ofstream logger_writer("current_and_best_weight.txt");
-    logger_writer << current_weight;
-    logger_writer << " ";
-    logger_writer << best_weight;
-    logger_writer.close();
 
-    #ifdef USE_GPU
-        c10::cuda::CUDACachingAllocator::emptyCache();
-    #endif
-  //  }
+        ofstream logger_writer("current_and_best_weight.txt");
+        logger_writer << current_weight;
+        logger_writer << " ";
+        logger_writer << best_weight;
+        logger_writer.close();
+    }
+
+
+    //  #ifdef USE_GPU
+    //      c10::cuda::CUDACachingAllocator::emptyCache();
+    //  #endif
+    //  }
 }
