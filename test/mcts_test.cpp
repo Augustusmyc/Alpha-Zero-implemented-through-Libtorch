@@ -5,6 +5,8 @@
 #include <libtorch.h>
 #include <common.h>
 
+using namespace std;
+
 int main(int argc, char* argv[]) {
   auto g = std::make_shared<Gomoku>(BORAD_SIZE, N_IN_ROW, BLACK);
   //Gomoku g(15, 5, 1);
@@ -24,11 +26,14 @@ int main(int argc, char* argv[]) {
   //torch::jit::script::Module module = torch::jit::load("../test/models/checkpoint.pt");
   
   NeuralNetwork *module = new NeuralNetwork(BATCH_SIZE);
+  bool ai_black = true;
   if (argc <= 1) {
-      printf("Do not load weights.\n");
+      cout << "Do not load weights. AI color = BLACK." << endl;
   }
   else {
-      printf("Load weights.\n");
+      ai_black = strcmp(argv[2], "1") == 0 ? true : false;
+      string color = ai_black ? "BLACK" : "WHITE";
+      cout << "Load weights: "<< argv[1] << "  AI color: " << color << endl;
       module->load_weights(argv[1]);
   }
   //module->save_weights("net.pt");
@@ -44,9 +49,11 @@ int main(int argc, char* argv[]) {
   std::pair<int, int> game_state;
 
   while (true) {
-    //int res = m.get_best_action(g.get());
-    //m.update_with_move(res);
-    //g->execute_move(res);
+    if (ai_black) {
+        int res = m.get_best_action(g.get());
+        m.update_with_move(res);
+        g->execute_move(res);
+    }
     g->render();
     game_state = g->get_game_status();
     if (game_state.first != 0) break;
@@ -65,10 +72,11 @@ int main(int argc, char* argv[]) {
       is_illlegal = g->is_illegal(x,y);
     }
     int my_move = x * BORAD_SIZE + y;
-
-    m.update_with_move(my_move);
-    g->execute_move(my_move);
-    g->render();
+    if (!ai_black) {
+        m.update_with_move(my_move);
+        g->execute_move(my_move);
+        g->render();
+    }
     game_state = g->get_game_status();
     if (game_state.first != 0) break;
 
