@@ -21,9 +21,13 @@ class SelfPlay{
         SelfPlay(NeuralNetwork *nn);
         //~SelfPlay();
         std::pair<int,int> self_play_for_eval(NeuralNetwork *a, NeuralNetwork *b);
-        void play(unsigned int id);
+        void play(unsigned int saved_id);
+
+        int play(NeuralNetwork* a, NeuralNetwork* b);
 
         void self_play_for_train(unsigned int game_num, unsigned int start_batch_id);
+
+        pair<int, int> self_play_for_eval(unsigned int game_num, NeuralNetwork* a, NeuralNetwork* b);
         
     private:
         //p_buff_type *p_buffer;

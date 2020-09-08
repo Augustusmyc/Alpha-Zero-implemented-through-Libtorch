@@ -23,7 +23,7 @@ SelfPlay::SelfPlay(NeuralNetwork *nn):
         {}
 
 
-void SelfPlay::play(unsigned int id){
+void SelfPlay::play(unsigned int saved_id){
   auto g = std::make_shared<Gomoku>(BORAD_SIZE, N_IN_ROW, BLACK);
   MCTS *m = new MCTS(nn, NUM_MCT_THREADS, C_PUCT, NUM_MCT_SIMS, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
   std::pair<int,int> game_state;
@@ -80,7 +80,7 @@ void SelfPlay::play(unsigned int id){
       cout << "total step num = " << step << " winner = " << game_state.second << endl;
 
       ofstream bestand;
-      bestand.open("./data/data_"+str(id), ios::out | ios::binary);
+      bestand.open("./data/data_"+str(saved_id), ios::out | ios::binary);
       bestand.write(reinterpret_cast<char*>(&step), sizeof(int));
 
       for (int i = 0; i < step; i++) {
@@ -123,6 +123,10 @@ void SelfPlay::play(unsigned int id){
       //inlezen.read(reinterpret_cast<char*>(&new_v_buffer[0]), step * sizeof(int));
   }
 
+//int SelfPlay::play(NeuralNetwork* a, NeuralNetwork* b) {
+//
+//}
+
 
 void SelfPlay::self_play_for_train(unsigned int game_num,unsigned int start_batch_id){
     std::vector<std::future<void>> futures;
@@ -139,3 +143,19 @@ void SelfPlay::self_play_for_train(unsigned int game_num,unsigned int start_batc
     }
     //return { *this->board_buffer , *this->p_buffer ,*this->v_buffer };
 }
+
+// pair<int,int> SelfPlay::self_play_for_eval(unsigned int game_num, NeuralNetwork* a, NeuralNetwork* b) {
+//    std::vector<std::future<void>> futures;
+//    //NeuralNetwork* a = new NeuralNetwork(NUM_MCT_THREADS * NUM_MCT_SIMS);
+//    for (unsigned int i = 0; i < game_num; i++) {
+//        auto future = thread_pool->commit(std::bind(&SelfPlay::play, this,a,b));
+//        futures.emplace_back(std::move(future));
+//    }
+//    this->nn->batch_size = game_num * NUM_MCT_THREADS;
+//    for (unsigned int i = 0; i < futures.size(); i++) {
+//        futures[i].wait();
+//
+//        this->nn->batch_size = max((unsigned)1, (game_num - i) * NUM_MCT_THREADS);
+//    }
+//    //return { *this->board_buffer , *this->p_buffer ,*this->v_buffer };
+//}

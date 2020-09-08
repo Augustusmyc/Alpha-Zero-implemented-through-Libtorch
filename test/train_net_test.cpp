@@ -166,50 +166,106 @@ shared_ptr<AlphaZeroNet> train(int current_weight, int data_batch_num) {
     return model;
 }
 
+future<int> play_for_eval(NeuralNetwork* a, NeuralNetwork* b, int &a_win_count,
+    int &b_win_count, int &tie, bool a_first) {
+    MCTS ma(a, NUM_MCT_THREADS, C_PUCT, NUM_MCT_SIMS, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
+    MCTS mb(b, NUM_MCT_THREADS, C_PUCT, NUM_MCT_SIMS, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
+    int step = 0;
+    auto g = std::make_shared<Gomoku>(BORAD_SIZE, N_IN_ROW, BLACK);
+    std::pair<int, int> game_state = g->get_game_status();
+    //std::cout << episode << " th game!!" << std::endl;
+    while (game_state.first == 0) {
+        int res = step % 2 == 0 ? ma.get_best_action(g.get()) : mb.get_best_action(g.get());
+        ma.update_with_move(res);
+        mb.update_with_move(res);
+        g->execute_move(res);
+        g->render();
+        game_state = g->get_game_status();
+        step++;
+    }
+    cout << "eval: total step num = " << step;
+
+    if ((game_state.second == BLACK && a_first) || (game_state.second == WHITE && !a_first)) {
+        cout << "  winner = current_weight" << endl;
+        a_win_count++;
+    }
+    else if ((game_state.second == BLACK && !a_first) || (game_state.second == WHITE && a_first)) {
+        cout << "  winner = old_best_weight" << endl;
+        b_win_count++;
+    } 
+    else if (game_state.second == 0) tie++;
+}
 
 std::pair<int, int> eval(int current_weight, int best_weight) {
     int a_win_count = 0;
     int b_win_count = 0;
-    //int tie = 0;
-    NeuralNetwork* a = new NeuralNetwork(NUM_MCT_THREADS);
-    NeuralNetwork* b = new NeuralNetwork(NUM_MCT_THREADS);
-    a->load_weights("./weights/" + str(current_weight) + ".pt");
-    b->load_weights("./weights/" + str(best_weight) + ".pt");
-    MCTS ma(a, NUM_MCT_THREADS, C_PUCT, NUM_MCT_SIMS, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
-    MCTS mb(b, NUM_MCT_THREADS, C_PUCT, NUM_MCT_SIMS, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
-    for (int episode = 0; episode < 4; episode++) {
-        int step = 0;
-        auto g = std::make_shared<Gomoku>(BORAD_SIZE, N_IN_ROW, BLACK);
-        std::pair<int, int> game_state = g->get_game_status();
-        //std::cout << episode << " th game!!" << std::endl;
-        while (game_state.first == 0) {
-            bool cur_net = (step + episode) % 2 == 0;
-            int res = cur_net ? ma.get_best_action(g.get()) : mb.get_best_action(g.get());
-            ma.update_with_move(res);
-            mb.update_with_move(res);
-            g->execute_move(res);
-            g->render();
-            game_state = g->get_game_status();
-            step++;
-        }
-        cout << "eval: total step num = " << step;
-        if ((game_state.second == BLACK && episode % 2 == 0) || (game_state.second == WHITE && episode % 2 == 1)) {
-            cout << "  winner = current_weight" << endl;
-            a_win_count++;
-        }
-        else if ((game_state.second == BLACK && episode % 2 == 1) || (game_state.second == WHITE && episode % 2 == 0)) {
-            cout << "  winner = old_best_weight" << endl;
-            b_win_count++;
-        } 
-        //else if (game_state.second == 0) tie++;
-#ifdef USE_GPU
-        c10::cuda::CUDACachingAllocator::emptyCache();
-#endif
+    int tie = 0;
+    int game_num = 4;
+    ThreadPool *thread_pool = new ThreadPool(game_num);
+    NeuralNetwork* cur_nn = new NeuralNetwork(game_num * NUM_MCT_THREADS);
+    NeuralNetwork* old_best_nn = new NeuralNetwork(game_num * NUM_MCT_THREADS);
+    cur_nn->load_weights("./weights/" + str(current_weight) + ".pt");
+    old_best_nn->load_weights("./weights/" + str(best_weight) + ".pt");
 
+
+    std::vector<std::future<void>> futures;
+    //NeuralNetwork* a = new NeuralNetwork(NUM_MCT_THREADS * NUM_MCT_SIMS);
+    for (unsigned int i = 0; i < game_num; i++) {
+        auto future = thread_pool->commit(std::bind(play_for_eval, cur_nn, old_best_nn, a_win_count, b_win_count, tie, i % 2 == 0));
+        futures.emplace_back(std::move(future));
     }
+    for (unsigned int i = 0; i < futures.size(); i++) {
+        cur_nn->batch_size = max((unsigned)1, (game_num - i) * NUM_MCT_THREADS);
+        old_best_nn->batch_size = max((unsigned)1, (game_num - i) * NUM_MCT_THREADS);
+    }
+
 
     return { a_win_count ,b_win_count };
 }
+
+//std::pair<int, int> eval(int current_weight, int best_weight) {
+//    int a_win_count = 0;
+//    int b_win_count = 0;
+//    //int tie = 0;
+//    NeuralNetwork* a = new NeuralNetwork(NUM_MCT_THREADS);
+//    NeuralNetwork* b = new NeuralNetwork(NUM_MCT_THREADS);
+//    a->load_weights("./weights/" + str(current_weight) + ".pt");
+//    b->load_weights("./weights/" + str(best_weight) + ".pt");
+//    MCTS ma(a, NUM_MCT_THREADS, C_PUCT, NUM_MCT_SIMS, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
+//    MCTS mb(b, NUM_MCT_THREADS, C_PUCT, NUM_MCT_SIMS, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
+//    for (int episode = 0; episode < 4; episode++) {
+//        int step = 0;
+//        auto g = std::make_shared<Gomoku>(BORAD_SIZE, N_IN_ROW, BLACK);
+//        std::pair<int, int> game_state = g->get_game_status();
+//        //std::cout << episode << " th game!!" << std::endl;
+//        while (game_state.first == 0) {
+//            bool cur_net = (step + episode) % 2 == 0;
+//            int res = cur_net ? ma.get_best_action(g.get()) : mb.get_best_action(g.get());
+//            ma.update_with_move(res);
+//            mb.update_with_move(res);
+//            g->execute_move(res);
+//            g->render();
+//            game_state = g->get_game_status();
+//            step++;
+//        }
+//        cout << "eval: total step num = " << step;
+//        if ((game_state.second == BLACK && episode % 2 == 0) || (game_state.second == WHITE && episode % 2 == 1)) {
+//            cout << "  winner = current_weight" << endl;
+//            a_win_count++;
+//        }
+//        else if ((game_state.second == BLACK && episode % 2 == 1) || (game_state.second == WHITE && episode % 2 == 0)) {
+//            cout << "  winner = old_best_weight" << endl;
+//            b_win_count++;
+//        } 
+//        //else if (game_state.second == 0) tie++;
+//#ifdef USE_GPU
+//        c10::cuda::CUDACachingAllocator::emptyCache();
+//#endif
+//
+//    }
+//
+//    return { a_win_count ,b_win_count };
+//}
 
 
 int main(int argc, char* argv[]) {
@@ -246,7 +302,7 @@ int main(int argc, char* argv[]) {
         logger_reader.close();
         generate_data_for_train(current_weight, stoi(str(argv[2]))* NUM_TRAIN_THREADS);
     }
-    else {
+    else if (strcmp(argv[1], "train") == 0) {
         int current_weight;
         int best_weight;
 
@@ -259,7 +315,8 @@ int main(int argc, char* argv[]) {
         train(current_weight, stoi(str(argv[2]))*NUM_TRAIN_THREADS);
         current_weight++;
         std::pair<int, int> result = eval(current_weight, best_weight);
-        if (result.first > result.second) {
+        cout << "result = " << result.first << " " << result.second << endl;
+        if (result.first > result.second + 1) {
             cout << "!!!!! new best id = " << current_weight << endl;
             best_weight = current_weight;
         }
