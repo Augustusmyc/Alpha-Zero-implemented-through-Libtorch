@@ -10,7 +10,7 @@
 
 // mcts
 //#define ACTIONSIZE = BORAD_SIZE*BORAD_SIZE
-//#define USE_GPU
+#define USE_GPU
 #define NUM_MCT_THREADS 2 // 4
 #define NUM_MCT_SIMS 45
 #define C_PUCT 1 //5

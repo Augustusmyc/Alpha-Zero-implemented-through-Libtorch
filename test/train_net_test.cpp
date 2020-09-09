@@ -213,24 +213,23 @@ std::pair<int, int> eval(int current_weight, int best_weight) {
 
 
 int main(int argc, char* argv[]) {
-    if ((strcmp(argv[1], "generate") == 0) && (strcmp(argv[2], "0") == 0)) {
-        cout << "train from scratch" << endl;
-        // system("mkdir weights");
+    if (strcmp(argv[1], "prepare") == 0) {
+        cout << "Prepare for training." << endl;
+            // system("mkdir weights");
 #ifdef _WIN32
-        system("mkdir .\\weights");
-        system("mkdir .\\data");
+            system("mkdir .\\weights");
+            system("mkdir .\\data");
 #elif __linux__
-        system("mkdir ./weights");
-        system("mkdir ./data");
+            system("mkdir ./weights");
+            system("mkdir ./data");
 #endif
-        NeuralNetwork* model = new NeuralNetwork(NUM_MCT_THREADS * NUM_MCT_SIMS);
-        model->save_weights("./weights/0.pt");
+            NeuralNetwork* model = new NeuralNetwork(NUM_MCT_THREADS * NUM_MCT_SIMS);
+            model->save_weights("./weights/0.pt");
         ofstream logger_writer("current_and_best_weight.txt");
         logger_writer << 0 << " " << 0;
         logger_writer.close();
-    }
-
-    if (strcmp(argv[1], "generate") == 0) {
+    }else if (strcmp(argv[1], "generate") == 0) {
+        cout << "generate " << atoi(argv[2])  << "-th batch."<< endl;
         int current_weight;
         int best_weight;
 
@@ -242,9 +241,9 @@ int main(int argc, char* argv[]) {
             return -1;
         }
         // logger_reader >> temp[1];
-        cout << "current_weight = " << current_weight << " and best_weight = " << best_weight << endl;
+        cout << "Generating... current_weight = " << current_weight << " and best_weight = " << best_weight << endl;
         logger_reader.close();
-        generate_data_for_train(current_weight, stoi(str(argv[2]))* NUM_TRAIN_THREADS);
+        generate_data_for_train(current_weight, atoi(argv[2]) * NUM_TRAIN_THREADS);
     }
     else {
         int current_weight;
@@ -254,7 +253,7 @@ int main(int argc, char* argv[]) {
         logger_reader >> current_weight;
         logger_reader >> best_weight;
         // logger_reader >> temp[1];
-        cout << "current_weight = " << current_weight << " and best_weight = " << best_weight << endl;
+        cout << "Training... current_weight = " << current_weight << " and best_weight = " << best_weight << endl;
         logger_reader.close();
         train(current_weight, stoi(str(argv[2]))*NUM_TRAIN_THREADS);
         current_weight++;

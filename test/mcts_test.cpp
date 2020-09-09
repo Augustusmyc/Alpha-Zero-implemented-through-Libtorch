@@ -47,13 +47,13 @@ int main(int argc, char* argv[]) {
   int move_j;
   bool is_illlegal = true;
   std::pair<int, int> game_state;
+  if (ai_black) {
+      int res = m.get_best_action(g.get());
+      m.update_with_move(res);
+      g->execute_move(res);
+  }
 
   while (true) {
-    if (ai_black) {
-        int res = m.get_best_action(g.get());
-        m.update_with_move(res);
-        g->execute_move(res);
-    }
     g->render();
     game_state = g->get_game_status();
     if (game_state.first != 0) break;
@@ -72,13 +72,13 @@ int main(int argc, char* argv[]) {
       is_illlegal = g->is_illegal(x,y);
     }
     int my_move = x * BORAD_SIZE + y;
-    if (!ai_black) {
-        m.update_with_move(my_move);
-        g->execute_move(my_move);
-        g->render();
-    }
+    m.update_with_move(my_move);
+    g->execute_move(my_move);
     game_state = g->get_game_status();
-    if (game_state.first != 0) break;
+    if (game_state.first != 0) {
+        g->render();
+        break;
+    }
 
     int res = m.get_best_action(g.get());
     m.update_with_move(res);

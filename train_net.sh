@@ -1,0 +1,1 @@
+exec ./train_net_test $1 $2
