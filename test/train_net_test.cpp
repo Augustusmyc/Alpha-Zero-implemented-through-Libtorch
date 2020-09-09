@@ -314,6 +314,10 @@ int main(int argc, char* argv[]) {
         logger_reader.close();
         train(current_weight, atoi(argv[2]) * NUM_TRAIN_THREADS);
         current_weight++;
+
+        ofstream logger_writer("current_and_best_weight.txt");
+        logger_writer << current_weight << " " << best_weight;
+        logger_writer.close();
     }
 	else if (strcmp(argv[1], "eval") == 0) {
 		int current_weight;
@@ -330,7 +334,7 @@ int main(int argc, char* argv[]) {
         if (result[0] > result[1] + 1) {
             cout << "new best weight: " << current_weight << " generated!!!!" << endl;
             ofstream logger_writer("current_and_best_weight.txt");
-            logger_writer << best_weight << " " << best_weight;
+            logger_writer << current_weight << " " << current_weight;
             logger_writer.close();
         }
 
