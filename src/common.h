@@ -4,15 +4,15 @@
 #define WHITE -BLACK
 
 // gomoku
-#define BORAD_SIZE 3
-#define N_IN_ROW 3
+#define BORAD_SIZE 15
+#define N_IN_ROW 5
 #define BLACK 1
 
 // mcts
 //#define ACTIONSIZE = BORAD_SIZE*BORAD_SIZE
 #define USE_GPU
-#define NUM_MCT_THREADS 2 // 4
-#define NUM_MCT_SIMS 45
+#define NUM_MCT_THREADS 40
+#define NUM_MCT_SIMS 1600
 #define C_PUCT 1 //5
 #define C_VIRTUAL_LOSS 0.3 //3
 #define EXPLORE_STEP 3
@@ -30,7 +30,7 @@
 #define NUM_TRAIN_THREADS 10
 
 #define BUFFER_LEN BORAD_SIZE*BORAD_SIZE+1
-#define NUM_DATA_GENERATION 70
+#define NUM_DATA_GENERATION 5
 
 namespace customType {
     using v_buff_type = std::vector<int>;

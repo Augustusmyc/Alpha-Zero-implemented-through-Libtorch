@@ -166,8 +166,7 @@ shared_ptr<AlphaZeroNet> train(int current_weight, int data_batch_num) {
     return model;
 }
 
-future<int> play_for_eval(NeuralNetwork* a, NeuralNetwork* b, int &a_win_count,
-    int &b_win_count, int &tie, bool a_first) {
+void play_for_eval(NeuralNetwork* a, NeuralNetwork* b, bool a_first, int* win_table, bool do_render) {
     MCTS ma(a, NUM_MCT_THREADS, C_PUCT, NUM_MCT_SIMS, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
     MCTS mb(b, NUM_MCT_THREADS, C_PUCT, NUM_MCT_SIMS, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
     int step = 0;
@@ -175,11 +174,11 @@ future<int> play_for_eval(NeuralNetwork* a, NeuralNetwork* b, int &a_win_count,
     std::pair<int, int> game_state = g->get_game_status();
     //std::cout << episode << " th game!!" << std::endl;
     while (game_state.first == 0) {
-        int res = step % 2 == 0 ? ma.get_best_action(g.get()) : mb.get_best_action(g.get());
+        int res = (step + a_first) % 2 ? ma.get_best_action(g.get()) : mb.get_best_action(g.get());
         ma.update_with_move(res);
         mb.update_with_move(res);
         g->execute_move(res);
-        g->render();
+        if(do_render) g->render();
         game_state = g->get_game_status();
         step++;
     }
@@ -187,20 +186,20 @@ future<int> play_for_eval(NeuralNetwork* a, NeuralNetwork* b, int &a_win_count,
 
     if ((game_state.second == BLACK && a_first) || (game_state.second == WHITE && !a_first)) {
         cout << "  winner = current_weight" << endl;
-        a_win_count++;
+        win_table[0]++;
     }
     else if ((game_state.second == BLACK && !a_first) || (game_state.second == WHITE && a_first)) {
         cout << "  winner = old_best_weight" << endl;
-        b_win_count++;
+        win_table[1]++;
     } 
-    else if (game_state.second == 0) tie++;
+    else if (game_state.second == 0) win_table[2]++;
 }
 
-std::pair<int, int> eval(int current_weight, int best_weight) {
-    int a_win_count = 0;
-    int b_win_count = 0;
-    int tie = 0;
-    int game_num = 4;
+
+
+vector<int> eval(int current_weight, int best_weight, unsigned int game_num) {
+    int win_table[3] = { 0,0,0 };
+    
     ThreadPool *thread_pool = new ThreadPool(game_num);
     NeuralNetwork* cur_nn = new NeuralNetwork(game_num * NUM_MCT_THREADS);
     NeuralNetwork* old_best_nn = new NeuralNetwork(game_num * NUM_MCT_THREADS);
@@ -211,16 +210,17 @@ std::pair<int, int> eval(int current_weight, int best_weight) {
     std::vector<std::future<void>> futures;
     //NeuralNetwork* a = new NeuralNetwork(NUM_MCT_THREADS * NUM_MCT_SIMS);
     for (unsigned int i = 0; i < game_num; i++) {
-        auto future = thread_pool->commit(std::bind(play_for_eval, cur_nn, old_best_nn, a_win_count, b_win_count, tie, i % 2 == 0));
+        auto future = thread_pool->commit(std::bind(play_for_eval, cur_nn, old_best_nn, i % 2 == 0, win_table,i==0));
         futures.emplace_back(std::move(future));
     }
     for (unsigned int i = 0; i < futures.size(); i++) {
+        futures[i].wait();
         cur_nn->batch_size = max((unsigned)1, (game_num - i) * NUM_MCT_THREADS);
         old_best_nn->batch_size = max((unsigned)1, (game_num - i) * NUM_MCT_THREADS);
     }
+    //cout << "win_table = " << win_table[0] << win_table[1] << win_table [2] << endl;
 
-
-    return { a_win_count ,b_win_count };
+    return { win_table[0], win_table[1],win_table[2] };
 }
 
 //std::pair<int, int> eval(int current_weight, int best_weight) {
@@ -287,17 +287,17 @@ int main(int argc, char* argv[]) {
     }else if (strcmp(argv[1], "generate") == 0) {
         cout << "generate " << atoi(argv[2])  << "-th batch."<< endl;
         int current_weight;
-        int best_weight;
+        //int best_weight;
 
         ifstream logger_reader("current_and_best_weight.txt");
         logger_reader >> current_weight;
-        logger_reader >> best_weight;
+        //logger_reader >> best_weight;
         if (current_weight < 0) {
             cout << "LOAD error,check current_and_best_weight.txt" << endl;
             return -1;
         }
         // logger_reader >> temp[1];
-        cout << "Generating... current_weight = " << current_weight << " and best_weight = " << best_weight << endl;
+        cout << "Generating... current_weight = " << current_weight << endl;
         logger_reader.close();
         generate_data_for_train(current_weight, atoi(argv[2]) * NUM_TRAIN_THREADS);
     }
@@ -308,23 +308,32 @@ int main(int argc, char* argv[]) {
         ifstream logger_reader("current_and_best_weight.txt");
         logger_reader >> current_weight;
         logger_reader >> best_weight;
-        // logger_reader >> temp[1];
         cout << "Training... current_weight = " << current_weight << " and best_weight = " << best_weight << endl;
+        
+
         logger_reader.close();
-        train(current_weight, stoi(str(argv[2]))*NUM_TRAIN_THREADS);
+        train(current_weight, atoi(argv[2]) * NUM_TRAIN_THREADS);
         current_weight++;
-        std::pair<int, int> result = eval(current_weight, best_weight);
-        cout << "result = " << result.first << " " << result.second << endl;
-        if (result.first > result.second + 1) {
-            cout << "!!!!! new best id = " << current_weight << endl;
-            best_weight = current_weight;
+    }
+	else if (strcmp(argv[1], "eval") == 0) {
+		int current_weight;
+        int best_weight;
+
+        ifstream logger_reader("current_and_best_weight.txt");
+        logger_reader >> current_weight;
+        logger_reader >> best_weight;
+        cout << "Evaluating... current_weight = " << current_weight << " and best_weight = " << best_weight << endl;
+
+        int game_num = atoi(argv[2]);
+        auto result = eval(current_weight, best_weight, game_num);
+        cout << "\n current win: " << result[0] << "  old best win: " << result[1] << "  tie: "<<result[2] << endl;
+        if (result[0] > result[1] + 1) {
+            cout << "new best weight: " << current_weight << " generated!!!!" << endl;
+            ofstream logger_writer("current_and_best_weight.txt");
+            logger_writer << best_weight << " " << best_weight;
+            logger_writer.close();
         }
 
-        ofstream logger_writer("current_and_best_weight.txt");
-        logger_writer << current_weight;
-        logger_writer << " ";
-        logger_writer << best_weight;
-        logger_writer.close();
     }
 
 

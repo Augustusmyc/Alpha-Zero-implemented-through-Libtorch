@@ -123,9 +123,6 @@ void SelfPlay::play(unsigned int saved_id){
       //inlezen.read(reinterpret_cast<char*>(&new_v_buffer[0]), step * sizeof(int));
   }
 
-//int SelfPlay::play(NeuralNetwork* a, NeuralNetwork* b) {
-//
-//}
 
 
 void SelfPlay::self_play_for_train(unsigned int game_num,unsigned int start_batch_id){
