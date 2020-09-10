@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
   }
   //module->save_weights("net.pt");
   
-  MCTS m(module, NUM_MCT_THREADS*100, C_PUCT, NUM_MCT_SIMS, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
+  MCTS m(module, NUM_MCT_THREADS, C_PUCT, NUM_MCT_SIMS, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
 
   std::cout << "Running..." << std::endl;
 
