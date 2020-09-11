@@ -369,9 +369,10 @@ void MCTS::simulate(std::shared_ptr<Gomoku> game) {
     double sum = 0;
     for (unsigned int i = 0; i < action_priors.size(); i++) {
       if (legal_moves[i] == 1) {
-        sum += action_priors[i];
+          //action_priors[i] += 12*FLT_EPSILON;
+          sum += action_priors[i];
       } else {
-        action_priors[i] = 0;
+          action_priors[i] = 0;
       }
     }
 

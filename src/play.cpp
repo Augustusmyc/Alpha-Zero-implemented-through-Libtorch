@@ -35,6 +35,8 @@ void SelfPlay::play(unsigned int saved_id){
   p_buff_type p_buffer(BUFFER_LEN, vector<float>(BORAD_SIZE * BORAD_SIZE));// = new p_buff_type();
   vector<int> col_buffer(BUFFER_LEN);
   vector<int> last_move_buffer(BUFFER_LEN);
+  // diri noise
+  static std::gamma_distribution<float> gamma(0.3f, 1.0f);
 
 
   while (game_state.first == 0) {
@@ -53,8 +55,7 @@ void SelfPlay::play(unsigned int saved_id){
         col_buffer[step] = g->get_current_color();
         last_move_buffer[step] = g->get_last_move();
 
-        // diri noise
-        static std::gamma_distribution<float> gamma(0.3f, 1.0f);
+        
         static std::default_random_engine rng(std::time(nullptr));
         std::vector<int> lm = g->get_legal_moves();
         float sum = 0;
