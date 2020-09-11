@@ -1,7 +1,7 @@
 #!/bin/bash
 n=1
-batch_num=50
-bash ./train_net.sh prepare
+batch_num=5
+# bash ./train_net.sh prepare
 
 while [ 1 ]
 do
@@ -14,5 +14,6 @@ do
 	done
 	wait
 	bash ./train_net.sh train $batch_num
+	bash ./train_net.sh eval 10
 	let n++
 done

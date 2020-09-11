@@ -8,30 +8,30 @@
     #define BORAD_SIZE 3
     #define N_IN_ROW 3
     #define NUM_MCT_THREADS 4
-    #define NUM_MCT_SIMS 54
+    #define NUM_MCT_SIMS 1600
     #define EXPLORE_STEP 5
-    #define C_PUCT 1
-    #define C_VIRTUAL_LOSS 0.3
-    #define NUM_CHANNELS 16 //256
-    #define NUM_LAYERS 2 //4
+    #define C_PUCT 3
+    #define C_VIRTUAL_LOSS 1
+    #define NUM_CHANNELS 256
+    #define NUM_LAYERS 4
 
     #define BATCH_SIZE 256 //512
-    #define DIRI 0.5
+    #define DIRI 0.2
 
-    #define NUM_TRAIN_THREADS 2
+    #define NUM_TRAIN_THREADS 4
 #else
     #define BORAD_SIZE 11
     #define N_IN_ROW 5
-    #define NUM_MCT_THREADS 40
+    #define NUM_MCT_THREADS 4
     #define NUM_MCT_SIMS 1600
-    #define EXPLORE_STEP 3
+    #define EXPLORE_STEP 5
     #define C_PUCT 5
     #define C_VIRTUAL_LOSS 3
     #define NUM_CHANNELS 256
     #define NUM_LAYERS 4
 
     #define BATCH_SIZE 256
-    #define DIRI 0.5
+    #define DIRI 0.1
 
     #define NUM_TRAIN_THREADS 20
 #endif

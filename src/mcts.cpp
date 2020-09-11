@@ -56,6 +56,7 @@ TreeNode &TreeNode::operator=(const TreeNode &node) {
   return *this;
 }
 
+//TODO：try random select?
 unsigned int TreeNode::select(double c_puct, double c_virtual_loss) {
   double best_value = -DBL_MAX;
   unsigned int best_move = 0;
@@ -83,6 +84,7 @@ unsigned int TreeNode::select(double c_puct, double c_virtual_loss) {
   return best_move;
 }
 
+//废弃？
 void TreeNode::expand(const std::vector<double> &action_priors) {
   {
     // get lock
@@ -108,6 +110,34 @@ void TreeNode::expand(const std::vector<double> &action_priors) {
     }//else{std::cout << "why not leaf !?" << std::endl;}
   }
 }
+
+void TreeNode::expand(const std::vector<double>& action_priors, std::vector<int>& legal_moves) {
+    {
+        // get lock
+        std::lock_guard<std::mutex> lock(this->lock);
+
+        if (this->is_leaf) {
+            unsigned int action_size = this->children.size();
+
+
+            for (unsigned int i = 0; i < action_size; i++) {
+                // illegal action
+                if (legal_moves[i] == 0)  {
+                    //std::cout << "illegal action " << i << " is: "<<action_priors[i] << std::endl;
+                    //std::cout << "illegal action " << i << " is: "<<abs(action_priors[i]) << std::endl;
+                    continue;
+                }
+                this->children[i] = new TreeNode(this, action_priors[i], action_size);
+                //std::cout << "action_priors[i] = " <<i<< action_priors[i] << std::endl;
+            }
+
+            // not leaf
+            this->is_leaf = false;
+        }//else{std::cout << "why not leaf !?" << std::endl;}
+    }
+}
+
+
 
 void TreeNode::backup(double value) {
   // If it is not root, this node's parent should be updated first
@@ -365,7 +395,7 @@ void MCTS::simulate(std::shared_ptr<Gomoku> game) {
     }
 
     // expand
-    node->expand(action_priors);
+    node->expand(action_priors, legal_moves);
 
   } else {
     // end
