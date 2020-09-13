@@ -27,32 +27,7 @@ void generate_data_for_train(int current_weight, int start_batch_id) {
 }
 
 
-Tensor transorm_board_to_Tensor(board_type board, int last_move, int cur_player) {
-    std::vector<int> board0;
-    for (unsigned int i = 0; i < BORAD_SIZE; i++) {
-        board0.insert(board0.end(), board[i].begin(), board[i].end());
-    }
 
-    torch::Tensor temp =
-        torch::from_blob(&board0[0], { 1, 1, BORAD_SIZE, BORAD_SIZE}, torch::dtype(torch::kInt32));
-
-    torch::Tensor state0 = temp.gt(0).toType(torch::kFloat32);
-    torch::Tensor state1 = temp.lt(0).toType(torch::kFloat32);
-
-    if (cur_player == -1) {
-        std::swap(state0, state1);
-    }
-
-    torch::Tensor state2 =
-        torch::zeros({ 1, 1, BORAD_SIZE, BORAD_SIZE }, torch::dtype(torch::kFloat32));
-
-    if (last_move != -1) {
-        state2[0][0][last_move / BORAD_SIZE][last_move % BORAD_SIZE] = 1;
-    }
-
-     torch::Tensor states = torch::cat({state0, state1}, 1);
-    return cat({ state0, state1, state2 }, 1);
-}
 
 shared_ptr<AlphaZeroNet> train(int current_weight, int data_batch_num) {
     shared_ptr<AlphaZeroNet> model = make_shared<AlphaZeroNet>(
@@ -109,7 +84,7 @@ shared_ptr<AlphaZeroNet> train(int current_weight, int data_batch_num) {
     vector<Tensor> p_tensor_buffer(sum_steps * 8);
 
     for (int i = 0; i < sum_steps; i++) {
-        board_tensor_buffer[i] = transorm_board_to_Tensor(board_buffer[i], last_move_buffer[i], col_buffer[i]);
+        board_tensor_buffer[i] = NeuralNetwork::transorm_board_to_Tensor(board_buffer[i], last_move_buffer[i], col_buffer[i]);
         p_tensor_buffer[i] = 
             torch::from_blob(&p_buffer[i][0], { 1, BORAD_SIZE,BORAD_SIZE }, torch::dtype(torch::kFloat32));
 
@@ -202,7 +177,7 @@ void play_for_eval(NeuralNetwork* a, NeuralNetwork* b, bool a_first, int* win_ta
         game_state = g->get_game_status();
         step++;
     }
-    cout << "eval: total step num = " << step;
+    cout << "eval: total step num = " << step << endl;
 
     if ((game_state.second == BLACK && a_first) || (game_state.second == WHITE && !a_first)) {
         cout << "  winner = current_weight" << endl;
@@ -374,8 +349,8 @@ int main(int argc, char* argv[]) {
         string result_log_info = str(current_weight) + "-th weight win: " + str(result[0]) + "  " + str(best_weight) + "-th weight win: " + str(result[1]) + "  tie: " + str(result[2]) + "\n";
         
 
-        float win_ratio = (result[0] - result[1])/(game_num+0.0);
-        if (win_ratio >0.55 ) {
+        float win_ratio = result[0] / (result[1]+0.01);
+        if (win_ratio > 1.2 ) {
             result_log_info += "new best weight: " + str(current_weight) + " generated!!!!\n";
             ofstream weight_logger_writer("current_and_best_weight.txt");
             weight_logger_writer << current_weight << " " << current_weight;
@@ -387,9 +362,9 @@ int main(int argc, char* argv[]) {
         ifstream random_mcts_logger_reader("random_mcts_number.txt");
         random_mcts_logger_reader >> random_mcts_simulation;
 
-        auto result2 = eval(current_weight, -1, game_num, NUM_MCT_SIMS/4, random_mcts_simulation);
-        string result_log_info2 = str(current_weight) + "-th weight win: " + str(result[0]) + "  Random mcts "+str(random_mcts_simulation)+ " win: " + str(result[1]) + "  tie: " + str(result[2]) + "\n";
-        if (result2[0] == game_num) {
+        vector<int> result2 = eval(current_weight, -1, game_num, NUM_MCT_SIMS/4, random_mcts_simulation);
+        string result_log_info2 = str(current_weight) + "-th weight with mcts ["+ str(NUM_MCT_SIMS / 4) + "] win: " + str(result[0]) + "  Random mcts ["+str(random_mcts_simulation)+ "] win: " + str(result[1]) + "  tie: " + str(result[2]) + "\n";
+        if (abs(result2[0] - game_num)==0) {
             random_mcts_simulation *= 2;
             result_log_info2 += "add random mcts number to: " + str(random_mcts_simulation) + "\n";
 

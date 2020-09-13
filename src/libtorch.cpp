@@ -184,38 +184,35 @@ std::future<NeuralNetwork::return_type> NeuralNetwork::commit(Gomoku* gomoku) {
   return ret;
 }
 
+Tensor NeuralNetwork::transorm_board_to_Tensor(board_type board, int last_move, int cur_player) {
+    std::vector<int> board0;
+    for (unsigned int i = 0; i < BORAD_SIZE; i++) {
+        board0.insert(board0.end(), board[i].begin(), board[i].end());
+    }
+
+    torch::Tensor temp =
+        torch::from_blob(&board0[0], { 1, 1, BORAD_SIZE, BORAD_SIZE }, torch::dtype(torch::kInt32));
+
+    torch::Tensor state0 = temp.gt(0).toType(torch::kFloat32);
+    torch::Tensor state1 = temp.lt(0).toType(torch::kFloat32);
+
+    if (cur_player == -1) {
+        std::swap(state0, state1);
+    }
+
+    torch::Tensor state2 =
+        torch::zeros({ 1, 1, BORAD_SIZE, BORAD_SIZE }, torch::dtype(torch::kFloat32));
+
+    if (last_move != -1) {
+        state2[0][0][last_move / BORAD_SIZE][last_move % BORAD_SIZE] = 1;
+    }
+
+    //torch::Tensor states = torch::cat({ state0, state1 }, 1);
+    return cat({ state0, state1, state2 }, 1);
+}
+
 Tensor NeuralNetwork::transorm_gomoku_to_Tensor(Gomoku* gomoku){
-  int n = gomoku->get_n();
-
-  // convert data format
-  auto board = gomoku->get_board();
-  std::vector<int> board0;
-  for (unsigned int i = 0; i < board.size(); i++) {
-    board0.insert(board0.end(), board[i].begin(), board[i].end());
-  }
-
-  torch::Tensor temp =
-      torch::from_blob(&board0[0], {1, 1, n, n}, torch::dtype(torch::kInt32));
-
-  torch::Tensor state0 = temp.gt(0).toType(torch::kFloat32);
-  torch::Tensor state1 = temp.lt(0).toType(torch::kFloat32);
-
-  int last_move = gomoku->get_last_move();
-  int cur_player = gomoku->get_current_color();
-
-  if (cur_player == -1) {
-    std::swap(state0, state1);
-  }
-
-  torch::Tensor state2 =
-      torch::zeros({1, 1, n, n}, torch::dtype(torch::kFloat32));
-
-  if (last_move != -1) {
-    state2[0][0][last_move / n][last_move % n] = 1;
-  }
-
-  // torch::Tensor states = torch::cat({state0, state1}, 1);
-  return torch::cat({state0, state1, state2}, 1);
+  return NeuralNetwork::transorm_board_to_Tensor(gomoku->get_board(), gomoku->get_last_move(), gomoku->get_current_color());
 }
 
 void NeuralNetwork::infer() {

@@ -78,7 +78,7 @@ void SelfPlay::play(unsigned int saved_id){
         game_state = g->get_game_status();
         step++;
     }
-      cout << "total step num = " << step << " winner = " << game_state.second << endl;
+      cout << "Self play: total step num = " << step << " winner = " << game_state.second << endl;
 
       ofstream bestand;
       bestand.open("./data/data_"+str(saved_id), ios::out | ios::binary);

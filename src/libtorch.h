@@ -49,6 +49,7 @@ class NeuralNetwork {
   std::future<return_type> commit(Gomoku* gomoku);  // commit task to queue
   //std::shared_ptr<torch::jit::script::Module> module;  // torch module    origin:private
   static Tensor transorm_gomoku_to_Tensor(Gomoku* gomoku);
+  static Tensor transorm_board_to_Tensor(board_type board, int last_move, int cur_player);
   unsigned int batch_size;                             // batch size
 
  private:
