@@ -365,7 +365,7 @@ int main(int argc, char* argv[]) {
         vector<int> result2 = eval(current_weight, -1, game_num, NUM_MCT_SIMS/4, random_mcts_simulation);
         string result_log_info2 = str(current_weight) + "-th weight with mcts ["+ str(NUM_MCT_SIMS / 4) + "] win: " + str(result[0]) + "  Random mcts ["+str(random_mcts_simulation)+ "] win: " + str(result[1]) + "  tie: " + str(result[2]) + "\n";
         if (abs(result2[0] - game_num)==0) {
-            random_mcts_simulation *= 2;
+            random_mcts_simulation += 200;
             result_log_info2 += "add random mcts number to: " + str(random_mcts_simulation) + "\n";
 
             ofstream random_mcts_logger_writer("random_mcts_number.txt");
