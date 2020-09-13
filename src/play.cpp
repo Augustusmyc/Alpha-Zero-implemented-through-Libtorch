@@ -92,7 +92,7 @@ void SelfPlay::play(unsigned int saved_id){
 
       for (int i = 0; i < step; i++) {
           bestand.write(reinterpret_cast<char*>(&p_buffer[i][0]), BORAD_SIZE * BORAD_SIZE * sizeof(float));
-          v_buffer[i] = col_buffer[step] * game_state.second;
+          v_buffer[i] = col_buffer[i] * game_state.second;
       }
 
       bestand.write(reinterpret_cast<char*>(&v_buffer[0]), step * sizeof(int));

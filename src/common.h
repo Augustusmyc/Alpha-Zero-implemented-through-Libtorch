@@ -1,21 +1,22 @@
 #pragma once
 
-#define DEBUG_MODE
+#define SMALL_BOARD_MODE
+// #define USE_GPU
 
 
 
-#ifdef DEBUG_MODE
+#ifdef SMALL_BOARD_MODE
     #define BORAD_SIZE 3
     #define N_IN_ROW 3
     #define NUM_MCT_THREADS 4
-    #define NUM_MCT_SIMS 1600
+    #define NUM_MCT_SIMS 54
     #define EXPLORE_STEP 5
     #define C_PUCT 3
     #define C_VIRTUAL_LOSS 1
-    #define NUM_CHANNELS 256
-    #define NUM_LAYERS 4
+    #define NUM_CHANNELS 16
+    #define NUM_LAYERS 2
 
-    #define BATCH_SIZE 256 //512
+    #define BATCH_SIZE 64 //512
     #define DIRI 0.2
 
     #define NUM_TRAIN_THREADS 4
@@ -39,7 +40,7 @@
 #define BLACK 1
 #define WHITE -BLACK
 
-#define USE_GPU
+
 
 #define LR 0.001
 //#define L2 0.0001

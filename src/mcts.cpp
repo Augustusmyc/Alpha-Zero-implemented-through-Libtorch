@@ -60,7 +60,7 @@ TreeNode &TreeNode::operator=(const TreeNode &node) {
 unsigned int TreeNode::select(double c_puct, double c_virtual_loss) {
   double best_value = -DBL_MAX;
   unsigned int best_move = 0;
-  TreeNode *best_node;
+  TreeNode* best_node = nullptr;
 
   for (unsigned int i = 0; i < this->children.size(); i++) {
     // empty node
@@ -306,7 +306,7 @@ int MCTS::get_best_action(Gomoku *gomoku) {
 
   // greedy
     unsigned int max_count = 0;
-    unsigned int best_action = 0;
+    int best_action = -1;
 
     for (unsigned int i = 0; i < children.size(); i++) {
       if (children[i] && children[i]->n_visited.load() > max_count) {
@@ -314,6 +314,7 @@ int MCTS::get_best_action(Gomoku *gomoku) {
         best_action = i;
       }
     }
+    assert(best_action >= 0);
     return best_action;
 }
 
@@ -355,17 +356,27 @@ void MCTS::simulate(std::shared_ptr<Gomoku> game) {
   if (status.first == 0) {
     // predict action_probs and value by neural network
     std::vector<double> action_priors(this->action_size, 0);
+    // mask invalid actions
+    auto legal_moves = game->get_legal_moves();
 
-    auto future = this->neural_network->commit(game.get());
-    auto result = future.get();
+    if (this->neural_network != nullptr) {
+        auto future = this->neural_network->commit(game.get());
+        auto result = future.get();
 
-    action_priors = std::move(result[0]);
-    value = result[1][0];
+        action_priors = std::move(result[0]);
+        value = result[1][0];
+    }
+    else {
+        double sum = std::accumulate(legal_moves.begin(), legal_moves.end(), 0);
+        for (unsigned int i = 0; i < action_priors.size(); i++) {
+            action_priors[i] = legal_moves[i] / sum;
+        }
+    }
+
 	//std::cout << "value = " << value << std::endl;
 	//std::cout << "action_priors = " << action_priors << std::endl;
 
-    // mask invalid actions
-    auto legal_moves = game->get_legal_moves();
+
     double sum = 0;
     for (unsigned int i = 0; i < action_priors.size(); i++) {
       if (legal_moves[i] == 1) {
@@ -387,7 +398,7 @@ void MCTS::simulate(std::shared_ptr<Gomoku> game) {
       // insufficient or you've get overfitting or something else. If you have
       // got dozens or hundreds of these messages you should pay attention to
       // your NNet and/or training process.
-      std::cout << "All valid moves were masked, do workaround." << std::endl;
+      std::cout << "Impossible !! All valid moves were masked, do workaround.(Check training process!!)" << std::endl;
 
       sum = std::accumulate(legal_moves.begin(), legal_moves.end(), 0);
       for (unsigned int i = 0; i < action_priors.size(); i++) {
