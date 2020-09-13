@@ -84,7 +84,7 @@ unsigned int TreeNode::select(double c_puct, double c_virtual_loss) {
   return best_move;
 }
 
-//废弃？
+
 void TreeNode::expand(const std::vector<double> &action_priors) {
   {
     // get lock
@@ -111,31 +111,31 @@ void TreeNode::expand(const std::vector<double> &action_priors) {
   }
 }
 
-void TreeNode::expand(const std::vector<double>& action_priors, std::vector<int>& legal_moves) {
-    {
-        // get lock
-        std::lock_guard<std::mutex> lock(this->lock);
-
-        if (this->is_leaf) {
-            unsigned int action_size = this->children.size();
-
-
-            for (unsigned int i = 0; i < action_size; i++) {
-                // illegal action
-                if (legal_moves[i] == 0)  {
-                    //std::cout << "illegal action " << i << " is: "<<action_priors[i] << std::endl;
-                    //std::cout << "illegal action " << i << " is: "<<abs(action_priors[i]) << std::endl;
-                    continue;
-                }
-                this->children[i] = new TreeNode(this, action_priors[i], action_size);
-                //std::cout << "action_priors[i] = " <<i<< action_priors[i] << std::endl;
-            }
-
-            // not leaf
-            this->is_leaf = false;
-        }//else{std::cout << "why not leaf !?" << std::endl;}
-    }
-}
+//void TreeNode::expand(const std::vector<double>& action_priors), std::vector<int>& legal_moves) {
+//    {
+//        // get lock
+//        std::lock_guard<std::mutex> lock(this->lock);
+//
+//        if (this->is_leaf) {
+//            unsigned int action_size = this->children.size();
+//
+//
+//            for (unsigned int i = 0; i < action_size; i++) {
+//                // illegal action
+//                if (legal_moves[i] < FLT_EPSILON)  {
+//                    //std::cout << "illegal action " << i << " is: "<<action_priors[i] << std::endl;
+//                    //std::cout << "illegal action " << i << " is: "<<abs(action_priors[i]) << std::endl;
+//                    continue;
+//                }
+//                this->children[i] = new TreeNode(this, action_priors[i], action_size);
+//                //std::cout << "action_priors[i] = " <<i<< action_priors[i] << std::endl;
+//            }
+//
+//            // not leaf
+//            this->is_leaf = false;
+//        }//else{std::cout << "why not leaf !?" << std::endl;}
+//    }
+//}
 
 
 
@@ -398,7 +398,7 @@ void MCTS::simulate(std::shared_ptr<Gomoku> game) {
       // insufficient or you've get overfitting or something else. If you have
       // got dozens or hundreds of these messages you should pay attention to
       // your NNet and/or training process.
-      std::cout << "Impossible !! All valid moves were masked, do workaround.(Check training process!!)" << std::endl;
+      std::cout << "Check training process!! All valid moves were masked, do workaround." << std::endl;
 
       sum = std::accumulate(legal_moves.begin(), legal_moves.end(), 0);
       for (unsigned int i = 0; i < action_priors.size(); i++) {
@@ -407,7 +407,7 @@ void MCTS::simulate(std::shared_ptr<Gomoku> game) {
     }
 
     // expand
-    node->expand(action_priors, legal_moves);
+    node->expand(action_priors);
 
   } else {
     // end

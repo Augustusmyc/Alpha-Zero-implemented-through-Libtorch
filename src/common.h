@@ -1,7 +1,7 @@
 #pragma once
 
-#define SMALL_BOARD_MODE
-// #define USE_GPU
+//#define SMALL_BOARD_MODE
+#define USE_GPU
 
 
 

@@ -24,7 +24,7 @@ class TreeNode {
 
   unsigned int select(double c_puct, double c_virtual_loss);
   void expand(const std::vector<double> &action_priors);
-  void expand(const std::vector<double>& action_priors, std::vector<int>& legal_moves);
+  //void expand(const std::vector<double>& action_priors, std::vector<int>& legal_moves);
   void backup(double leaf_value);
 
   double get_value(double c_puct, double c_virtual_loss,

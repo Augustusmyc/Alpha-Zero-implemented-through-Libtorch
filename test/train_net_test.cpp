@@ -126,8 +126,8 @@ shared_ptr<AlphaZeroNet> train(int current_weight, int data_batch_num) {
     e = std::default_random_engine(seed);
     shuffle(v_buffer.begin(), v_buffer.end(), e);
 
-    cout << board_tensor_buffer[1] << endl;
-    cout << p_tensor_buffer[1] << endl;
+    //cout << board_tensor_buffer[1] << endl;
+    //cout << p_tensor_buffer[1] << endl;
 
     model->train();
     torch::AutoGradMode enable_grad(true);
@@ -180,11 +180,11 @@ void play_for_eval(NeuralNetwork* a, NeuralNetwork* b, bool a_first, int* win_ta
     cout << "eval: total step num = " << step << endl;
 
     if ((game_state.second == BLACK && a_first) || (game_state.second == WHITE && !a_first)) {
-        cout << "  winner = current_weight" << endl;
+        cout << "winner = a" << endl;
         win_table[0]++;
     }
     else if ((game_state.second == BLACK && !a_first) || (game_state.second == WHITE && a_first)) {
-        cout << "  winner = old_best_weight" << endl;
+        cout << "winner = b" << endl;
         win_table[1]++;
     } 
     else if (game_state.second == 0) win_table[2]++;
