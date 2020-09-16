@@ -280,6 +280,20 @@ std::vector<double> MCTS::get_action_probs(Gomoku *gomoku, double temp) {
   }
 }
 
+int MCTS::get_best_action_from_prob(std::vector<double> action_probs) {
+    int best_action = -1;
+    float best_prob = -1.0f;
+
+    for (unsigned int i = 0; i < BORAD_SIZE* BORAD_SIZE; i++) {
+        if (action_probs[i] > best_prob) {
+            best_prob = action_probs[i];
+            best_action = i;
+        }
+    }
+    assert(best_action >= 0);
+    return best_action;
+}
+
 
 int MCTS::get_best_action(Gomoku *gomoku) {
   // submit simulate tasks to thread_pool

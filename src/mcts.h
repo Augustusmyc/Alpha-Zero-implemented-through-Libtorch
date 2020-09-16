@@ -52,6 +52,7 @@ class MCTS {
   std::vector<double> get_action_probs(Gomoku *gomoku, double temp = 1e-3);
   int get_action_by_sample(std::vector<double> action_probs);
   int get_best_action(Gomoku *gomoku);
+  int MCTS::get_best_action_from_prob(std::vector<double> action_probs);
   void update_with_move(int last_move);
   unsigned int action_size;
 
