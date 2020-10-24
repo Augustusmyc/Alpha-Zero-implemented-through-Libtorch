@@ -11,6 +11,13 @@
 #include <c10/cuda/CUDACachingAllocator.h>
 #endif
 
+#ifdef JIT_MODE
+#define TS std::vector<torch::jit::IValue>
+#else
+#define TS Tensor
+#endif // JIT_MODE
+
+
 using namespace customType;
 using namespace std::chrono_literals;
 using namespace torch;
@@ -132,9 +139,12 @@ NeuralNetwork::NeuralNetwork(unsigned int batch_size)
       running(true),
       //optimizer(this->module->parameters(), torch::optim::AdamOptions(2e-4)),
       loop(nullptr) {
-  module = std::make_shared<AlphaZeroNet>(
-  AlphaZeroNet(/*num_layers=*/NUM_LAYERS,/*num_channels=*/NUM_CHANNELS,/*n=*/BORAD_SIZE,/*action_size=*/BORAD_SIZE * BORAD_SIZE));
-
+#ifdef JIT_MODE
+    module = std::make_shared<torch::jit::script::Module>();
+#else
+    module = std::make_shared<AlphaZeroNet>(
+        AlphaZeroNet(/*num_layers=*/NUM_LAYERS,/*num_channels=*/NUM_CHANNELS,/*n=*/BORAD_SIZE,/*action_size=*/BORAD_SIZE * BORAD_SIZE));
+#endif
   //this->optimizer = new torch::optim::Adam(this->module->parameters(), torch::optim::AdamOptions(LR));
 
 #ifdef USE_GPU
@@ -154,11 +164,20 @@ NeuralNetwork::NeuralNetwork(unsigned int batch_size)
 }
 
 void NeuralNetwork::save_weights(string model_path) {
-  torch::save(this->module, model_path.c_str());
+
+#ifdef JIT_MODE
+    std::cout << "jit mode cannot save model,just skip!" << std::endl;
+#else
+    torch::save(this->module, model_path.c_str());
+#endif 
 }
 
 void NeuralNetwork::load_weights(string model_path) {
-  torch::load(this->module, model_path.c_str());
+#ifdef JIT_MODE
+    torch::jit::load(model_path.c_str());
+#else
+    torch::load(this->module, model_path.c_str());
+#endif
 }
 
 NeuralNetwork::~NeuralNetwork() {
@@ -249,17 +268,30 @@ void NeuralNetwork::infer() {
     return;
   }
 #ifdef USE_GPU
-  Tensor inputs = cat(states, 0).to(at::kCUDA);
+    TS inputs{ cat(states, 0).to(at::kCUDA) };
 #else
-  Tensor inputs = cat(states, 0);
+    TS inputs = cat(states, 0);
 #endif
 
-   auto result = this->module->forward(inputs);
-   //std::cout << y.requires_grad() << std::endl; // prints `false`
+#ifdef JIT_MODE
+    auto result = this->module->forward(inputs).toTuple();
+    torch::Tensor p_batch = result->elements()[0]
+        .toTensor()
+        .exp()
+        .toType(torch::kFloat32)
+        .to(at::kCPU);
+    torch::Tensor v_batch =
+        result->elements()[1].toTensor().toType(torch::kFloat32).to(at::kCPU);
+#else
+    auto result = this->module->forward(inputs);
+    //std::cout << y.requires_grad() << std::endl; // prints `false`
 
-  
-  Tensor p_batch = result.first.exp().toType(kFloat32).to(at::kCPU);
-  Tensor v_batch = result.second.toType(kFloat32).to(at::kCPU);
+
+    Tensor p_batch = result.first.exp().toType(kFloat32).to(at::kCPU);
+    Tensor v_batch = result.second.toType(kFloat32).to(at::kCPU);
+#endif
+
+
 
   // set promise value
   for (unsigned int i = 0; i < promises.size(); i++) {

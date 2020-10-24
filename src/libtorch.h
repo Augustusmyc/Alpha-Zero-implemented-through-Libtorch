@@ -1,6 +1,5 @@
 #pragma once
-
-//#include <torch/script.h>  // One-stop header.
+#include <torch/script.h>  // One-stop header.
 #include <torch/torch.h>
 
 #include <future>
@@ -55,8 +54,11 @@ class NeuralNetwork {
  private:
   using task_type = std::pair<Tensor, std::promise<return_type>>;
   //optim::Adam *optimizer;
+#ifdef JIT_MODE
+  std::shared_ptr<torch::jit::script::Module> module;
+#else
   std::shared_ptr<AlphaZeroNet> module;
-  
+#endif
 
   void infer();  // infer
   

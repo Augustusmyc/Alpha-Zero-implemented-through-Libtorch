@@ -158,6 +158,7 @@ class NeuralNetWorkWrapper():
             # sample
             train_data = random.sample(example_buffer, batch_size)
 
+
             # extract train data
             board_batch, last_action_batch, cur_player_batch, p_batch, v_batch = list(zip(*train_data))
 

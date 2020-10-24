@@ -2,6 +2,7 @@
 
 #define SMALL_BOARD_MODE
 #define USE_GPU
+#define JIT_MODE
 
 
 

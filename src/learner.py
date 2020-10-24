@@ -66,20 +66,23 @@ class Learner():
         # t = threading.Thread(target=self.gomoku_gui.loop)
         # t.start()
 
-    def learn(self):
+    def learn(self, model_dir=None,model_id=0):
         # train the model by self play
 
         # model_id = 0
-        # best_model = path.join('..','build','weights', str(model_id))
-        # if path.exists(best_model+'.pkl'):
-        #     print(f"loading {model_id}-th model")
-        #     self.nnet.load_model(best_model)
-        #     #self.load_samples()
-        # else:
-        #     print("prepare: save 0-th model")
-        #     # save torchscript
-        #     # self.nnet.save_model()
-        #     self.nnet.save_model(best_model)
+        if model_dir==None:
+            print("debug mode: best_model_dir = join('..','build','weights', str(model_id))")
+            model_dir = path.join('..','build','weights')
+        model_path = path.join(model_dir, str(model_id))
+        if path.exists(model_path+'.pkl'):
+            print(f"loading {model_id}-th model")
+            self.nnet.load_model(model_path)
+            #self.load_samples()
+        else:
+            print("prepare: save 0-th model")
+            # save torchscript
+            # self.nnet.save_model()
+            self.nnet.save_model(model_path)
 
         data_path = path.join('..', 'build', 'data')
         train_data = self.load_samples(data_path)
@@ -87,8 +90,10 @@ class Learner():
 
         # train neural network
         epochs = self.epochs * (len(train_data) + self.batch_size - 1) // self.batch_size
-        self.nnet.train(train_data, self.batch_size, int(epochs))
-        # self.nnet.save_model()
+        self.nnet.train(train_data, min(self.batch_size,len(train_data)), int(epochs))
+
+        model_path = path.join(model_dir, str(model_id+1))
+        self.nnet.save_model(model_path)
 
     def get_symmetries(self, board, pi, last_action):
         # mirror, rotational
@@ -101,6 +106,7 @@ class Learner():
 
         for i in range(1, 5):
             for j in [True, False]:
+                
                 newB = np.rot90(board, i)
                 newPi = np.rot90(pi_board, i)
                 newAction = np.rot90(last_action_board, i)
@@ -129,7 +135,7 @@ class Learner():
                         data = binfile.read(4)
                         data = int().from_bytes(data, byteorder='little', signed=True)
                         board[i][j] = data
-                        # board = board.reshape((-1,BOARD_SIZE,BOARD_SIZE))
+                board = np.reshape(board,(-1,BOARD_SIZE,BOARD_SIZE))
                 prob = np.zeros((step, BOARD_SIZE * BOARD_SIZE))
                 for i in range(step):
                     for j in range(BOARD_SIZE * BOARD_SIZE):
@@ -160,7 +166,7 @@ class Learner():
 
                 for i in range(step):
                     sym = self.get_symmetries(board[i], prob[i], last_action[i])
-                    for i, (b, p, a) in enumerate(sym):
+                    for b, p, a in sym:
                         train_examples.append([b, a, color[i], p, v[i]])
         return train_examples
 
