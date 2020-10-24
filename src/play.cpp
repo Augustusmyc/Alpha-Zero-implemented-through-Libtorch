@@ -39,12 +39,12 @@ void SelfPlay::play(unsigned int saved_id){
   static std::gamma_distribution<float> gamma(0.3f, 1.0f);
   static std::default_random_engine rng(std::time(nullptr));
 
-
+  //bool is1 = true;
   while (game_state.first == 0) {
-        //double temp = step < EXPLORE_STEP ? 1 : 0;
-        //auto action_probs = m->get_action_probs(g.get(), temp);
-        auto action_probs = m->get_action_probs(g.get(), 1);
-        int best_action = m->get_best_action_from_prob(action_probs);
+        double temp = step < EXPLORE_STEP ? 1 : 0;
+        auto action_probs = m->get_action_probs(g.get(), temp);
+        //auto action_probs = m->get_action_probs(g.get(), 1);
+        //int best_action = m->get_best_action_from_prob(action_probs);
 
         board_type board = g->get_board();
         for (int i = 0; i < BORAD_SIZE * BORAD_SIZE; i++) {
@@ -64,12 +64,18 @@ void SelfPlay::play(unsigned int saved_id){
         float sum = 0;
         for (int i = 0; i < lm.size(); i++) {
             if (lm[i]) {
-                if (step < EXPLORE_STEP) {
-                    action_probs[i] += DIRI * gamma(rng);
-                }
-                else {
-                    action_probs[i] = (i== best_action) + DIRI * gamma(rng);
-                }
+                float noi = DIRI * gamma(rng);
+                //if (is1){
+                //    cout << "noi = " << noi << endl;
+                //    is1 = false;
+                //}
+                action_probs[i] += noi;
+            //    if (step < EXPLORE_STEP) {
+            //        action_probs[i] += DIRI * gamma(rng);
+            //    }
+            //    else {
+            //        action_probs[i] = (i== best_action) + DIRI * gamma(rng);
+            //    }
                 sum += action_probs[i];
             }
         }

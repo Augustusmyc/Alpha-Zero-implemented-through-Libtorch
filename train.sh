@@ -1,7 +1,7 @@
 #!/bin/bash
 n=1
-batch_num=5
-# bash ./train_net.sh prepare
+batch_num=1
+bash ./train_net.sh prepare
 
 while [ 1 ]
 do

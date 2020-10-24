@@ -362,10 +362,12 @@ int main(int argc, char* argv[]) {
         ifstream random_mcts_logger_reader("random_mcts_number.txt");
         random_mcts_logger_reader >> random_mcts_simulation;
 
-        vector<int> result_random_mcts = eval(current_weight, -1, game_num, NUM_MCT_SIMS/4, random_mcts_simulation);
-        string result_log_info2 = str(current_weight) + "-th weight with mcts ["+ str(NUM_MCT_SIMS / 4) + "] win: " + str(result_random_mcts[0]) + "  Random mcts ["+str(random_mcts_simulation)+ "] win: " + str(result_random_mcts[1]) + "  tie: " + str(result_random_mcts[2]) + "\n";
+        int decrease_ratio = 1;
+
+        vector<int> result_random_mcts = eval(current_weight, -1, game_num, NUM_MCT_SIMS / decrease_ratio, random_mcts_simulation);
+        string result_log_info2 = str(current_weight) + "-th weight with mcts ["+ str(NUM_MCT_SIMS / decrease_ratio) + "] win: " + str(result_random_mcts[0]) + "  Random mcts ["+str(random_mcts_simulation)+ "] win: " + str(result_random_mcts[1]) + "  tie: " + str(result_random_mcts[2]) + "\n";
         if (abs(result_random_mcts[0] - game_num)==0) {
-            random_mcts_simulation += 200;
+            random_mcts_simulation += 10;
             result_log_info2 += "add random mcts number to: " + str(random_mcts_simulation) + "\n";
 
             ofstream random_mcts_logger_writer("random_mcts_number.txt");

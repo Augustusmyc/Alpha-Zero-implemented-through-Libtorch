@@ -15,7 +15,6 @@ using namespace customType;
 using namespace std::chrono_literals;
 using namespace torch;
 
-
 nn::Conv2d conv3x3(int64_t in_channels, int64_t out_channels, unsigned int stride=1){
   return nn::Conv2d(nn::Conv2dOptions(/*in_channel=*/in_channels, out_channels, /*kernel_size=*/3).stride(stride).padding(1).bias(false));
 }
@@ -25,18 +24,18 @@ struct ResidualBlock:nn::Module {
     //only for initializing array
   }
 
-  ResidualBlock(int64_t in_channels, int64_t out_channels, unsigned int stride=1){
-    conv1 = register_module("conv1",conv3x3(in_channels, out_channels, stride));
-    bn1 = register_module("bn1", nn::BatchNorm2d(out_channels));
-    conv2 = register_module("conv2",conv3x3(out_channels, out_channels));
-    bn2 = register_module("bn2", nn::BatchNorm2d(out_channels));
+  ResidualBlock(int64_t in_channels, int64_t out_channels, unsigned int stride,int global_count){
+    conv1 = register_module("conv1"+str(global_count),conv3x3(in_channels, out_channels, stride));
+    bn1 = register_module("bn1" + str(global_count), nn::BatchNorm2d(out_channels));
+    conv2 = register_module("conv2" + str(global_count),conv3x3(out_channels, out_channels));
+    bn2 = register_module("bn2" + str(global_count), nn::BatchNorm2d(out_channels));
     // relu = register_module("relu", nn::ReLU(true));
     this->out_channels = out_channels;
     downsample = false;
     if (in_channels != out_channels || stride != 1){
       downsample = true;
-      downsample_conv = register_module("downsample_conv",conv3x3(in_channels, out_channels, stride=stride));
-      downsample_bn = register_module("downsample_bn", nn::BatchNorm2d(out_channels));
+      downsample_conv = register_module("downsample_conv" + str(global_count),conv3x3(in_channels, out_channels, stride=stride));
+      downsample_bn = register_module("downsample_bn" + str(global_count), nn::BatchNorm2d(out_channels));
     }
   }
 
@@ -74,9 +73,9 @@ AlphaZeroNet::AlphaZeroNet(const unsigned int num_layers, int64_t num_channels, 
       p_log_softmax(nullptr){
     // residual block
     ResidualBlock *res_list = new ResidualBlock[num_layers]();//  ResidualBlock(3, num_channels);
-    res_list[0] = ResidualBlock(3, num_channels);
+    res_list[0] = ResidualBlock(3, num_channels,1,-999);
     for (unsigned int i = 1; i<num_layers; i++){
-        res_list[i] = ResidualBlock(num_channels, num_channels);
+        res_list[i] = ResidualBlock(num_channels, num_channels,1,i);
      }
 #ifdef USE_GPU
         for (unsigned int i = 0; i < num_layers; i++) {
