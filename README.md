@@ -8,8 +8,13 @@
 
 模型训练部分：支持python(pytorch)训练 + torchscript推理，也支持使用c++(libtorch)训练，后者整个流程将完全用c++实现，而且模型会小很多（但有些训练细节还需完善，暂不推荐使用）
 
+# Supported Games
+Currently Only Gomoku and Tic-Tac-Toe (Welcome other game implementions by githubers ~~)
 
-# OS System
+# Langrage
+Mainly C++ (for speed!), except that model can be trained by either c++ or python (pytorch and libtorch).
+
+# Supported OS System
 linux/Windows (tested on Ubuntu 16/18 and Windows 10)
 
 # Dependence
