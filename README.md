@@ -1,9 +1,13 @@
 # Alpha Zero implemented through Libtorch
 
 一个使用C++(libtorch) 进行推理的Alpha Zero训练框架。
+
 支持多线程蒙特卡洛树搜索。
+
 目前游戏仅支持五子棋和井字棋，如果有小伙伴愿意提供其它棋类游戏的源码，欢迎来合并~~~~
+
 蒙特卡洛树搜索和模型推理由c++完成（为了加快速度）
+
 模型训练部分：支持python(pytorch)训练 + torchscript推理，也支持使用c++(libtorch)训练，后者整个流程将完全用c++实现，而且模型会小很多（但有些训练细节还需完善，暂不推荐使用）
 
 
