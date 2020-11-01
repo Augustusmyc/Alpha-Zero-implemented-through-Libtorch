@@ -11,23 +11,31 @@
 linux/Windows (tested on Ubuntu 16/18 and Windows 10)
 
 # Dependence
-## gcc(linux) or visual studio 19(windows)
-## cmake 3.18+
-## libtorch (debug version)
-## python + pytorch (optional)
+gcc(linux) or visual studio 19(windows)
+cmake 3.18+
+libtorch (debug version)
+python + pytorch (optional)
 
 # Installation(linux)
 mkdir build
+
 cd build
+
 cmake ..
+
 make
 
 # Installation(windows)
 make new direction named "build" 
+
 cd .\build
+
 cmake -A x64 ..
+
 cmake --build . --config Debug
-cd .\Debug 
+
+cd .\Debug
+
 open .sln file through visual Studio 19 and generate
 
 # train
@@ -35,5 +43,7 @@ bash train.sh (linux) or double click the .bat file (windows)
 
 # human play with AI
 run mcts_test, for example in linux:
+
 ./mcts_test ./weights/1000.pt 1
+
 Here 1(0) = AI color is black(white) 
