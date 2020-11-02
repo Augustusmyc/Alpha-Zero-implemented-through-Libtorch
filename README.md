@@ -17,7 +17,7 @@ linux/Windows (tested on Ubuntu 16/18 and Windows 10)
 # Supported Enviroment
 Both GPU and CPU (Tested on Tesla V100 and GTX 1080 and Intel i7)
 
-# Langrage
+# Language
 Mainly C++ (for speed!), except that model can be trained by either c++ or python (pytorch + libtorch).
 
 # Dependence
