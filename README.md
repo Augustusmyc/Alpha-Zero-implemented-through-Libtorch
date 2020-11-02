@@ -6,7 +6,9 @@
 
 支持多线程蒙特卡洛树搜索,该部分和模型推理部分均由c++完成（为了加快速度，并且避开python GIL的坑）
 
-模型训练部分：支持python(pytorch)训练 + torchscript推理，也支持使用c++(libtorch)训练，后者整个流程将完全用c++实现，而且模型会小很多（但有些训练细节还需完善，暂不推荐使用）
+模型训练部分：支持python(pytorch)训练 + torchscript推理（jit模式），也支持使用c++(libtorch)训练，后者整个流程完全使用c++实现，模型会小很多（但有些训练细节还需完善，暂不推荐使用）
+
+由于我这边主要用linux训练，windows相应的代码可能不会及时更新，需要修改一下才能用，特别是bat文件部分
 
 # Supported Games
 Currently Only Gomoku and Tic-Tac-Toe (Welcome other game implementions by githubers ~~)
@@ -55,7 +57,18 @@ open .sln file through visual Studio 19 and generate
 
 
 # Train
-bash train.sh (linux) or double click the .bat file (windows)
+Linux: 
+
+copy *.sh to ./build
+
+cd ./build
+
+bash train.sh
+
+
+Windows: 
+
+double click the windows train.bat
 
 
 # Human play with AI

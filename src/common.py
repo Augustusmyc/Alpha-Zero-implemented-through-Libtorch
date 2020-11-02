@@ -1,7 +1,7 @@
 config = {
     # gomoku
-    'n': 5,                                    # board size
-    'n_in_row': 15,                              # n in row
+    'n': 15,                                    # board size
+    'n_in_row': 5,                              # n in row
 
     # mcts
     'libtorch_use_gpu' : True,                  # libtorch use cuda

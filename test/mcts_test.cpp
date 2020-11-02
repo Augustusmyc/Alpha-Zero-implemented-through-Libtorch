@@ -30,7 +30,8 @@ int main(int argc, char* argv[]) {
   if (argc <= 1) {
       // cout << "Do not load weights. AI color = BLACK." << endl;
       // module = new NeuralNetwork(BATCH_SIZE);
-      cout << "input weight path !!" << endl;
+      cout << "Warning: Find No weight path and color, assume they are ./weights/0.pt and 1 (AI color:Black)" << endl;
+      module = new NeuralNetwork("./weights/0.pt", BATCH_SIZE);
   }
   else {
       ai_black = strcmp(argv[2], "1") == 0 ? true : false;
