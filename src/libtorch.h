@@ -38,11 +38,14 @@ class NeuralNetwork {
  public:
   using return_type = std::vector<std::vector<double>>;
 
-  NeuralNetwork(unsigned int batch_size);
+  NeuralNetwork(std::string model_path, unsigned int batch_size);
+#ifndef JIT_MODE
+  void save_weights(std::string model_path);
+  void load_weights(std::string model_path);
+#endif
   ~NeuralNetwork();
 
-  void save_weights(string model_path);
-  void load_weights(string model_path);
+
   //void train(board_buff_type board_buffer, p_buff_type p_buffer, v_buff_type v_buffer);
 
   std::future<return_type> commit(Gomoku* gomoku);  // commit task to queue

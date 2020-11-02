@@ -20,8 +20,7 @@ static inline Tensor alpha_loss(Tensor& log_ps, Tensor& vs, const Tensor& target
 }
 
 void generate_data_for_train(int current_weight, int start_batch_id) {
-    NeuralNetwork* model = new NeuralNetwork(NUM_MCT_THREADS * NUM_MCT_SIMS);
-    model->load_weights("./weights/"+str(current_weight)+".pt");
+    NeuralNetwork* model = new NeuralNetwork("./weights/" + str(current_weight) + ".pt", NUM_MCT_THREADS * NUM_MCT_SIMS);
     SelfPlay* sp = new SelfPlay(model);
     sp->self_play_for_train(NUM_TRAIN_THREADS, start_batch_id);
 }
@@ -196,21 +195,15 @@ vector<int> eval(int weight_a, int weight_b, unsigned int game_num,int a_sims,in
     int win_table[3] = { 0,0,0 };
     
     ThreadPool *thread_pool = new ThreadPool(game_num);
-    NeuralNetwork* nn_a = new NeuralNetwork(game_num * a_sims);
-    NeuralNetwork* nn_b = new NeuralNetwork(game_num * b_sims);
+    NeuralNetwork* nn_a = nullptr;
+    NeuralNetwork* nn_b = nullptr;
     
-    if (weight_a < 0) {
-        nn_a = nullptr;
-    }
-    else {
-        nn_a->load_weights("./weights/" + str(weight_a) + ".pt");
+    if (weight_a > 0) {
+        NeuralNetwork* nn_a = new NeuralNetwork("./weights/" + str(weight_a) + ".pt", game_num * a_sims);
     }
 
-    if (weight_b < 0) {
-        nn_b = nullptr;
-    }
-    else {
-        nn_b->load_weights("./weights/" + str(weight_b) + ".pt");
+    if (weight_b > 0) {
+        NeuralNetwork* nn_b = new NeuralNetwork("./weights/" + str(weight_b) + ".pt", game_num * b_sims);
     }
     std::vector<std::future<void>> futures;
     //NeuralNetwork* a = new NeuralNetwork(NUM_MCT_THREADS * NUM_MCT_SIMS);
@@ -289,8 +282,13 @@ int main(int argc, char* argv[]) {
             system("mkdir ./weights");
             system("mkdir ./data");
 #endif
+#ifdef JIT_MODE
+            cout << "generate initial weight by python" << endl;
+            //system("python ..\\data\\src\\learner.py train");
+#else
             NeuralNetwork* model = new NeuralNetwork(NUM_MCT_THREADS * NUM_MCT_SIMS);
             model->save_weights("./weights/0.pt");
+#endif
         ofstream weight_logger_writer("current_and_best_weight.txt");
         weight_logger_writer << 0 << " " << 0;
         weight_logger_writer.close();

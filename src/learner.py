@@ -5,6 +5,7 @@ import os
 # import time
 # import math
 import numpy as np
+import config
 # import pickle
 # import concurrent.futures
 import random, struct
@@ -66,23 +67,28 @@ class Learner():
         # t = threading.Thread(target=self.gomoku_gui.loop)
         # t.start()
 
-    def learn(self, model_dir=None,model_id=0):
+    def learn(self, model_dir,model_id):
         # train the model by self play
 
-        # model_id = 0
-        if model_dir==None:
-            print("debug mode: best_model_dir = join('..','build','weights', str(model_id))")
-            model_dir = path.join('..','build','weights')
         model_path = path.join(model_dir, str(model_id))
-        if path.exists(model_path+'.pkl'):
-            print(f"loading {model_id}-th model")
-            self.nnet.load_model(model_path)
-            #self.load_samples()
-        else:
-            print("prepare: save 0-th model")
-            # save torchscript
-            # self.nnet.save_model()
-            self.nnet.save_model(model_path)
+        assert path.exists(model_path+'.pkl'),f"{model_path+'.pkl'} not exists!!!"
+        print(f"loading {model_id}-th model")
+        self.nnet.load_model(model_path)
+
+        # model_id = 0
+        # if model_dir==None:
+        #     print("debug mode: best_model_dir = join('..','build','weights', str(model_id))")
+        #     model_dir = path.join('..','build','weights')
+        # model_path = path.join(model_dir, str(model_id))
+        # if path.exists(model_path+'.pkl'):
+        #     print(f"loading {model_id}-th model")
+        #     self.nnet.load_model(model_path)
+        #     #self.load_samples()
+        # else:
+        #     print("prepare: save 0-th model")
+        #     # save torchscript
+        #     # self.nnet.save_model()
+        #     self.nnet.save_model(model_path)
 
         data_path = path.join('..', 'build', 'data')
         train_data = self.load_samples(data_path)
@@ -170,20 +176,19 @@ class Learner():
                         train_examples.append([b, a, color[i], p, v[i]])
         return train_examples
 
-    # def save_samples(self, folder="models", filename="checkpoint.example"):
-    #     """save self.examples_buffer
-    #     """
-
-    #     if not path.exists(folder):
-    #         mkdir(folder)
-
-    #     filepath = path.join(folder, filename)
-    #     with open(filepath, 'wb') as f:
-    #         pickle.dump(self.examples_buffer, f, -1)
-
 
 if __name__ == '__main__':
-    import config
-
+    model_dir = path.join("..","build","weights")
     le = Learner(config.config)
-    le.learn()
+    if len(sys.argv) <= 1:
+        le.nnet.save_model(path.join(model_dir,'0'))
+        print("0-th model generated !!")
+    else:
+        assert sys.argv[1] == "train", sys.argv[1]
+        with open(path.join("..","build","current_and_best_weight.txt"), 'r') as f:
+            current_id, best_id =  f.readline().split(" ")
+            current_id = int(current_id)
+        le.learn(model_dir=model_dir,model_id=current_id)
+        with open(path.join("..","build","current_and_best_weight.txt"), 'w') as f:
+            f.write(str(int(current_id)+1) + " "+ str(best_id))
+        

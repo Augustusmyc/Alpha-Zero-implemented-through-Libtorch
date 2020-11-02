@@ -25,16 +25,18 @@ int main(int argc, char* argv[]) {
   //std::shared_ptr<torch::jit::script::Module> module = torch::jit::load("../test/models/checkpoint.pt");
   //torch::jit::script::Module module = torch::jit::load("../test/models/checkpoint.pt");
   
-  NeuralNetwork *module = new NeuralNetwork(BATCH_SIZE);
+  NeuralNetwork* module = nullptr;
   bool ai_black = true;
   if (argc <= 1) {
-      cout << "Do not load weights. AI color = BLACK." << endl;
+      // cout << "Do not load weights. AI color = BLACK." << endl;
+      // module = new NeuralNetwork(BATCH_SIZE);
+      cout << "input weight path !!" << endl;
   }
   else {
       ai_black = strcmp(argv[2], "1") == 0 ? true : false;
       string color = ai_black ? "BLACK" : "WHITE";
       cout << "Load weights: "<< argv[1] << "  AI color: " << color << endl;
-      module->load_weights(argv[1]);
+      module = new NeuralNetwork(argv[1],BATCH_SIZE);
   }
   //module->save_weights("net.pt");
   

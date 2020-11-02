@@ -133,20 +133,21 @@ AlphaZeroNet::AlphaZeroNet(const unsigned int num_layers, int64_t num_channels, 
     return std::make_pair(p,v);
   }
 
-NeuralNetwork::NeuralNetwork(unsigned int batch_size)
+
+NeuralNetwork::NeuralNetwork(std::string model_path, unsigned int batch_size)
     : //module(std::make_shared<torch::jit::script::Module>(torch::jit::load(model_path.c_str()))),
       batch_size(batch_size),
       running(true),
       //optimizer(this->module->parameters(), torch::optim::AdamOptions(2e-4)),
       loop(nullptr) {
 #ifdef JIT_MODE
-    module = std::make_shared<torch::jit::script::Module>();
+    module = std::make_shared<torch::jit::script::Module>(torch::jit::load(model_path.c_str()));
+  //this->optimizer = new torch::optim::Adam(this->module->parameters(), torch::optim::AdamOptions(LR));
 #else
     module = std::make_shared<AlphaZeroNet>(
-        AlphaZeroNet(/*num_layers=*/NUM_LAYERS,/*num_channels=*/NUM_CHANNELS,/*n=*/BORAD_SIZE,/*action_size=*/BORAD_SIZE * BORAD_SIZE));
+                AlphaZeroNet(/*num_layers=*/NUM_LAYERS,/*num_channels=*/NUM_CHANNELS,/*n=*/BORAD_SIZE,/*action_size=*/BORAD_SIZE * BORAD_SIZE));
+    module->load_weights(model_path.c_str());
 #endif
-  //this->optimizer = new torch::optim::Adam(this->module->parameters(), torch::optim::AdamOptions(LR));
-
 #ifdef USE_GPU
     // move to CUDA
     this->module->to(at::kCUDA);
@@ -163,22 +164,46 @@ NeuralNetwork::NeuralNetwork(unsigned int batch_size)
   });
 }
 
-void NeuralNetwork::save_weights(string model_path) {
+//NeuralNetwork::NeuralNetwork(unsigned int batch_size)
+//    : //module(std::make_shared<torch::jit::script::Module>(torch::jit::load(model_path.c_str()))),
+//    batch_size(batch_size),
+//    running(true),
+//    //optimizer(this->module->parameters(), torch::optim::AdamOptions(2e-4)),
+//    loop(nullptr) {
+//    module = std::make_shared<AlphaZeroNet>(
+//        AlphaZeroNet(/*num_layers=*/NUM_LAYERS,/*num_channels=*/NUM_CHANNELS,/*n=*/BORAD_SIZE,/*action_size=*/BORAD_SIZE * BORAD_SIZE));
+//
+//    //this->optimizer = new torch::optim::Adam(this->module->parameters(), torch::optim::AdamOptions(LR));
+//
+//#ifdef USE_GPU
+//    // move to CUDA
+//    this->module->to(at::kCUDA);
+//#endif
+//
+//    //this->optimizer(this->module->parameters(), torch::optim::AdamOptions(2e-4).beta1(0.5));
+//    //auto optimizer = torch::optim::Adam(this->module->parameters(), 0.01);
+//
+//   // run infer thread
+//    this->loop = std::make_unique<std::thread>([this] {
+//        while (this->running) {
+//            this->infer();
+//        }
+//        });
+//}
 
-#ifdef JIT_MODE
-    std::cout << "jit mode cannot save model,just skip!" << std::endl;
-#else
+#ifndef JIT_MODE
+void NeuralNetwork::save_weights(string model_path) {
     torch::save(this->module, model_path.c_str());
-#endif 
 }
 
 void NeuralNetwork::load_weights(string model_path) {
-#ifdef JIT_MODE
-    torch::jit::load(model_path.c_str());
-#else
     torch::load(this->module, model_path.c_str());
-#endif
 }
+#endif
+
+
+
+
 
 NeuralNetwork::~NeuralNetwork() {
   this->running = false;
