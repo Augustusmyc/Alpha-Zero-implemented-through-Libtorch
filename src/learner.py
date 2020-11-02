@@ -5,7 +5,7 @@ import os
 # import time
 # import math
 import numpy as np
-import config
+import common as config
 # import pickle
 # import concurrent.futures
 import random, struct
@@ -18,18 +18,8 @@ sys.path.append('../build')
 from neural_network import NeuralNetWorkWrapper
 
 
-# def tuple_2d_to_numpy_2d(tuple_2d):
-#     # help function
-#     # convert type
-#     res = [None] * len(tuple_2d)
-#     for i, tuple_1d in enumerate(tuple_2d):
-#         res[i] = list(tuple_1d)
-#     return np.array(res)
-
-
 class Learner():
     def __init__(self, config):
-        # see config.py
         # gomoku
         self.n = config['n']
         self.n_in_row = config['n_in_row']
