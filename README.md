@@ -13,17 +13,21 @@
 # Supported Games
 Currently Only Gomoku and Tic-Tac-Toe (Welcome other game implementions by githubers ~~)
 
+
 # Supported OS System
 linux/Windows (tested on Ubuntu 16/18 and Windows 10)
 
+
 # Supported Enviroment
-Both GPU and CPU (Tested on Tesla V100 and GTX 1080 and Intel i7)
+Both GPU and CPU (GPU test on Tesla V100 and GTX 1080 / CPU test on Intel i7)
+
 
 # Language
 Mainly C++ (for speed!), except that model can be trained by either c++ or python (pytorch + libtorch).
 
+
 # Dependence
-gcc(linux) or visual studio 19(windows)
+gcc(linux, test version:7.5.0) or visual studio 19(windows)
 
 cmake 3.18+
 
