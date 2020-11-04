@@ -198,13 +198,22 @@ vector<int> eval(int weight_a, int weight_b, unsigned int game_num,int a_sims,in
     NeuralNetwork* nn_a = nullptr;
     NeuralNetwork* nn_b = nullptr;
     
-    if (weight_a > 0) {
-        NeuralNetwork* nn_a = new NeuralNetwork("./weights/" + str(weight_a) + ".pt", game_num * a_sims);
+    if (weight_a >= 0) {
+        nn_a = new NeuralNetwork("./weights/" + str(weight_a) + ".pt", game_num * a_sims);
+        cout << "NeuralNetwork A load: " << weight_a << endl;
+    }
+    else {
+        cout << "NeuralNetwork A applies random policy!" << endl;
     }
 
-    if (weight_b > 0) {
-        NeuralNetwork* nn_b = new NeuralNetwork("./weights/" + str(weight_b) + ".pt", game_num * b_sims);
+    if (weight_b >= 0) {
+        nn_b = new NeuralNetwork("./weights/" + str(weight_b) + ".pt", game_num * b_sims);
+        cout << "NeuralNetwork B load: " << weight_b << endl;
     }
+    else {
+        cout << "NeuralNetwork B applies random policy!" << endl;
+    }
+
     std::vector<std::future<void>> futures;
     //NeuralNetwork* a = new NeuralNetwork(NUM_MCT_THREADS * NUM_MCT_SIMS);
     for (unsigned int i = 0; i < game_num; i++) {
@@ -360,12 +369,12 @@ int main(int argc, char* argv[]) {
         ifstream random_mcts_logger_reader("random_mcts_number.txt");
         random_mcts_logger_reader >> random_mcts_simulation;
 
-        int decrease_ratio = 1;
+        int nn_mcts_simulation = NUM_MCT_SIMS / 4;
 
-        vector<int> result_random_mcts = eval(current_weight, -1, game_num, NUM_MCT_SIMS / decrease_ratio, random_mcts_simulation);
-        string result_log_info2 = str(current_weight) + "-th weight with mcts ["+ str(NUM_MCT_SIMS / decrease_ratio) + "] win: " + str(result_random_mcts[0]) + "  Random mcts ["+str(random_mcts_simulation)+ "] win: " + str(result_random_mcts[1]) + "  tie: " + str(result_random_mcts[2]) + "\n";
-        if (abs(result_random_mcts[0] - game_num)==0) {
-            random_mcts_simulation += 10;
+        vector<int> result_random_mcts = eval(current_weight, -1, game_num, nn_mcts_simulation, random_mcts_simulation);
+        string result_log_info2 = str(current_weight) + "-th weight with mcts ["+ str(nn_mcts_simulation) + "] win: " + str(result_random_mcts[0]) + "  Random mcts ["+str(random_mcts_simulation)+ "] win: " + str(result_random_mcts[1]) + "  tie: " + str(result_random_mcts[2]) + "\n";
+        if (result_random_mcts[0] - game_num==0 && random_mcts_simulation < 5000) {
+            random_mcts_simulation += 100;
             result_log_info2 += "add random mcts number to: " + str(random_mcts_simulation) + "\n";
 
             ofstream random_mcts_logger_writer("random_mcts_number.txt");

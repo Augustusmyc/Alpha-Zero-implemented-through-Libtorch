@@ -2,16 +2,16 @@
 n=1
 batch_num=1
 jit_mode=1
-do_prepare=1
-if [ do_prepare ]
+do_prepare=0
+if [ $do_prepare == 1 ]
 then
-bash ./train_net.sh prepare
-	if [ jit_mode ]
+	echo "preparing........"
+	bash ./train_net.sh prepare
+	if [ $jit_mode == 1 ]
 	then
 		python ../src/learner.py
 	fi
 fi
-
 
 while [ 1 ]
 do
@@ -23,7 +23,7 @@ do
 		}&
 	done
 	wait
-	if [ jit_mode ]
+	if [ $jit_mode == 1 ]
 	then
 		python ../src/learner.py train
 	else

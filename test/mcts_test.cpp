@@ -31,13 +31,13 @@ int main(int argc, char* argv[]) {
       // cout << "Do not load weights. AI color = BLACK." << endl;
       // module = new NeuralNetwork(BATCH_SIZE);
       cout << "Warning: Find No weight path and color, assume they are ./weights/0.pt and 1 (AI color:Black)" << endl;
-      module = new NeuralNetwork("./weights/0.pt", BATCH_SIZE);
+      module = new NeuralNetwork("./weights/0.pt", NUM_MCT_SIMS);
   }
   else {
       ai_black = strcmp(argv[2], "1") == 0 ? true : false;
       string color = ai_black ? "BLACK" : "WHITE";
       cout << "Load weights: "<< argv[1] << "  AI color: " << color << endl;
-      module = new NeuralNetwork(argv[1],BATCH_SIZE);
+      module = new NeuralNetwork(argv[1], NUM_MCT_SIMS);
   }
   //module->save_weights("net.pt");
   
