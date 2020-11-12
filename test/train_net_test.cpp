@@ -15,9 +15,7 @@
 using namespace std;
 using namespace torch;
 
-static inline Tensor alpha_loss(Tensor& log_ps, Tensor& vs, const Tensor& target_ps, const Tensor& target_vs) {
-    return mean(pow(vs - target_vs, 2)) - mean(sum(target_ps * log_ps, 1)); // value_loss + policy_loss
-}
+
 
 void generate_data_for_train(int current_weight, int start_batch_id) {
     NeuralNetwork* model = new NeuralNetwork("./weights/" + str(current_weight) + ".pt", NUM_MCT_THREADS * NUM_MCT_SIMS);
@@ -27,6 +25,10 @@ void generate_data_for_train(int current_weight, int start_batch_id) {
 
 
 
+#ifndef JIT_MODE
+static inline Tensor alpha_loss(Tensor& log_ps, Tensor& vs, const Tensor& target_ps, const Tensor& target_vs) {
+    return mean(pow(vs - target_vs, 2)) - mean(sum(target_ps * log_ps, 1)); // value_loss + policy_loss
+}
 
 shared_ptr<AlphaZeroNet> train(int current_weight, int data_batch_num) {
     shared_ptr<AlphaZeroNet> model = make_shared<AlphaZeroNet>(
@@ -34,7 +36,20 @@ shared_ptr<AlphaZeroNet> train(int current_weight, int data_batch_num) {
             /*n=*/BORAD_SIZE,/*action_size=*/BORAD_SIZE * BORAD_SIZE));
     load(model, "./weights/" + str(current_weight) + ".pt");
 
-    optim::Adam* optimizer = new optim::Adam(model->parameters(), optim::AdamOptions(LR));
+    double lr = NULL;
+    ifstream weight_lr_reader("lr.txt");
+    weight_lr_reader >> lr;
+    weight_lr_reader.close();
+
+    lr *= W_DECAY;
+    cout << "current lr = " << lr<< endl;
+
+    ofstream weight_logger_writer("lr.txt");
+    weight_logger_writer << lr;
+    weight_logger_writer.close();
+
+
+    optim::Adam* optimizer = new optim::Adam(model->parameters(), optim::AdamOptions(lr));
 
     ifstream inlezen;
     vector<int> step_list(data_batch_num);
@@ -159,6 +174,7 @@ shared_ptr<AlphaZeroNet> train(int current_weight, int data_batch_num) {
     save(model, "./weights/" + str(current_weight+1) + ".pt");
     return model;
 }
+#endif
 
 void play_for_eval(NeuralNetwork* a, NeuralNetwork* b, bool a_first, int* win_table, bool do_render,const int a_mct_sims,const int b_mct_sims) {
     MCTS ma(a, NUM_MCT_THREADS, C_PUCT, a_mct_sims, C_VIRTUAL_LOSS, BORAD_SIZE * BORAD_SIZE);
@@ -295,8 +311,11 @@ int main(int argc, char* argv[]) {
             cout << "generate initial weight by python" << endl;
             //system("python ..\\data\\src\\learner.py train");
 #else
-            NeuralNetwork* model = new NeuralNetwork(NUM_MCT_THREADS * NUM_MCT_SIMS);
+            NeuralNetwork* model = new NeuralNetwork("", 1);
             model->save_weights("./weights/0.pt");
+            ofstream lr_writer("lr.txt");
+            lr_writer << LR;
+            lr_writer.close();
 #endif
         ofstream weight_logger_writer("current_and_best_weight.txt");
         weight_logger_writer << 0 << " " << 0;
@@ -305,6 +324,7 @@ int main(int argc, char* argv[]) {
         ofstream random_mcts_logger_writer("random_mcts_number.txt");
         random_mcts_logger_writer << NUM_MCT_SIMS;
         random_mcts_logger_writer.close();
+
     }else if (strcmp(argv[1], "generate") == 0) {
         cout << "generate " << atoi(argv[2])  << "-th batch."<< endl;
         int current_weight;
@@ -322,6 +342,7 @@ int main(int argc, char* argv[]) {
         logger_reader.close();
         generate_data_for_train(current_weight, atoi(argv[2]) * NUM_TRAIN_THREADS);
     }
+#ifndef JIT_MODE
     else if (strcmp(argv[1], "train") == 0) {
         int current_weight;
         int best_weight;
@@ -340,6 +361,7 @@ int main(int argc, char* argv[]) {
         weight_logger_writer << current_weight << " " << best_weight;
         weight_logger_writer.close();
     }
+#endif
 	else if (strcmp(argv[1], "eval") == 0) {
 		int current_weight;
         int best_weight;

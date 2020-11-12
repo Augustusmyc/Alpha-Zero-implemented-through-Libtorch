@@ -138,7 +138,6 @@ NeuralNetwork::NeuralNetwork(std::string model_path, unsigned int batch_size)
     : //module(std::make_shared<torch::jit::script::Module>(torch::jit::load(model_path.c_str()))),
       batch_size(batch_size),
       running(true),
-      //optimizer(this->module->parameters(), torch::optim::AdamOptions(2e-4)),
       loop(nullptr) {
 #ifdef JIT_MODE
     module = std::make_shared<torch::jit::script::Module>(torch::jit::load(model_path.c_str()));
@@ -146,7 +145,9 @@ NeuralNetwork::NeuralNetwork(std::string model_path, unsigned int batch_size)
 #else
     module = std::make_shared<AlphaZeroNet>(
                 AlphaZeroNet(/*num_layers=*/NUM_LAYERS,/*num_channels=*/NUM_CHANNELS,/*n=*/BORAD_SIZE,/*action_size=*/BORAD_SIZE * BORAD_SIZE));
-    module->load_weights(model_path.c_str());
+    if (model_path != "") {
+        this->load_weights(model_path.c_str());
+    }
 #endif
 #ifdef USE_GPU
     // move to CUDA
@@ -190,6 +191,8 @@ NeuralNetwork::NeuralNetwork(std::string model_path, unsigned int batch_size)
 //        }
 //        });
 //}
+
+
 
 #ifndef JIT_MODE
 void NeuralNetwork::save_weights(string model_path) {

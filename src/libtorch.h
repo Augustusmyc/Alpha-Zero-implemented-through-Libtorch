@@ -39,8 +39,8 @@ class NeuralNetwork {
   using return_type = std::vector<std::vector<double>>;
 
   NeuralNetwork(std::string model_path, unsigned int batch_size);
-#ifndef JIT_MODE
   void save_weights(std::string model_path);
+#ifndef JIT_MODE
   void load_weights(std::string model_path);
 #endif
   ~NeuralNetwork();

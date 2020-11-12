@@ -1,8 +1,8 @@
 #!/bin/bash
 n=1
 batch_num=1
-jit_mode=1
-do_prepare=0
+jit_mode=0
+do_prepare=1
 if [ $do_prepare == 1 ]
 then
 	echo "preparing........"
@@ -25,7 +25,7 @@ do
 	wait
 	if [ $jit_mode == 1 ]
 	then
-		python ../src/learner.py train
+		/data/miniconda3/bin/python ../src/learner.py train
 	else
 		bash ./train_net.sh train $batch_num
 	fi

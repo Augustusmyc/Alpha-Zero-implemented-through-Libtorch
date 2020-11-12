@@ -4,7 +4,10 @@
 #define USE_GPU
 #define JIT_MODE
 
-
+#ifndef JIT_MODE
+    #define LR 0.001
+    #define W_DECAY 1-0.01
+#endif
 
 #ifdef SMALL_BOARD_MODE
     #define BORAD_SIZE 3
@@ -43,8 +46,6 @@
 
 
 
-#define LR 0.00000003 //0.001
-//#define L2 0.0001
 
 #define BUFFER_LEN BORAD_SIZE*BORAD_SIZE+1
 
