@@ -1,17 +1,9 @@
 # Alpha Zero implemented through Libtorch
-
-一个使用C++(libtorch) 进行推理的Alpha Zero训练框架。
-
-目前游戏仅支持五子棋和井字棋，如果有小伙伴愿意提供其它棋类游戏的源码，欢迎来合并~~~~
-
-支持多线程蒙特卡洛树搜索,该部分和模型推理部分均由c++完成（为了加快速度，并且避开python GIL的坑）
-
-模型训练部分：支持python(pytorch)训练 + torchscript推理（jit模式），也支持使用c++(libtorch)训练，后者整个流程完全使用c++实现，模型会小很多（但有些训练细节还需完善，暂不推荐使用）
-
-由于我这边主要用linux训练，windows相应的代码可能不会及时更新，需要修改一下才能用，特别是bat文件部分
+# NOTE
+This project stops update now.
 
 # Supported Games
-Currently Only Gomoku and Tic-Tac-Toe (Welcome other game implementions by githubers ~~)
+Currently Only Gomoku and Tic-Tac-Toe (Welcome other game implementions by githubers)
 
 
 # Supported OS System
@@ -81,3 +73,18 @@ run mcts_test, for example in linux:
 ./mcts_test ./weights/1000.pt 1
 
 Here 1(0) = AI play with black(white) pieces. 
+
+
+# About this project
+这是一个使用C++(libtorch) 进行推理的Alpha Zero训练框架。
+
+目前游戏仅支持五子棋和井字棋，如果有小伙伴愿意提供其它棋类游戏的源码，欢迎来合并。
+
+支持多线程蒙特卡洛树搜索,该部分和模型推理部分均由c++完成（为了加快速度，并且避开python GIL的坑）
+
+模型训练部分：支持python(pytorch)训练 + torchscript推理（jit模式），
+也支持使用c++(libtorch)训练，后者整个流程完全使用c++实现，不过目前来看效果并不理想，原因不明。因时间关系此项目不再更新。
+
+注:最新项目改用onnxruntime推理 + pytorch训练，onnxruntime只需c++,这意味着只有训练时需要python. 事实上训练时用到pytorch的时间并不长，主要时间都花在左右互搏的推理过程中。
+
+由于我这边主要用linux训练，windows相应的代码可能不会及时更新，需要修改一下才能用，特别是bat文件部分。
