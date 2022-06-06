@@ -1,6 +1,8 @@
 # Alpha Zero implemented through Libtorch
 # NOTE
 This project stops update now.
+New Project:
+https://github.com/Augustusmyc/Alpha-Zero-Gomoku
 
 # Supported Games
 Currently Only Gomoku and Tic-Tac-Toe (Welcome other game implementions by githubers)
